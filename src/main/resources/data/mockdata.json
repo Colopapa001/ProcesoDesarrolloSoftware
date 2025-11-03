@@ -1,0 +1,28 @@
+{
+  "sportTypes": [
+    { "name": "FOOTBALL" },
+    { "name": "BASKETBALL" },
+    { "name": "VOLLEYBALL" },
+    { "name": "TENNIS" },
+    { "name": "OTHER" }
+  ],
+  "skillLevels": [
+    { "name": "BEGINNER", "rank": 1 },
+    { "name": "INTERMEDIATE", "rank": 2 },
+    { "name": "ADVANCED", "rank": 3 }
+  ],
+  "notificationChannels": [
+    { "name": "EMAIL" },
+    { "name": "PUSH" }
+  ],
+  "defaultNotificationChannels": ["EMAIL", "PUSH"],
+  "matchEvents": [
+    { "name": "NEW_FOR_FAVORITE_SPORT" },
+    { "name": "ASSEMBLED" },
+    { "name": "CONFIRMED" },
+    { "name": "IN_PROGRESS" },
+    { "name": "FINISHED" },
+    { "name": "CANCELED" }
+  ]
+}
+

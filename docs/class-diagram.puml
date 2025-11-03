@@ -1,0 +1,130 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+
+package "Model" {
+  class User {
+    - id: String
+    - username: String
+    - email: String
+    - passwordHash: String
+    - favoriteSport: SportType
+    - skillLevel: SkillLevel
+  }
+
+  class SportType { + name: String }
+  class SkillLevel { + name: String, + rank: int }
+
+  class Match {
+    - id: String
+    - sportType: SportType
+    - requiredPlayers: int
+    - durationMinutes: int
+    - location: String
+    - startDateTime: LocalDateTime
+    - players: List<User>
+    - observers: List<NotificationObserver>
+    - state: MatchState
+  }
+
+  interface MatchState {
+    + name(): String
+    + onPlayerJoined(match: Match)
+    + confirm(match: Match)
+    + start(match: Match)
+    + finish(match: Match)
+    + cancel(match: Match)
+  }
+
+  class NeedPlayersState
+  class AssembledState
+  class ConfirmedState
+  class InProgressState
+  class FinishedState
+  class CanceledState
+}
+
+Match --> MatchState
+NeedPlayersState ..|> MatchState
+AssembledState ..|> MatchState
+ConfirmedState ..|> MatchState
+InProgressState ..|> MatchState
+FinishedState ..|> MatchState
+CanceledState ..|> MatchState
+Match "*" o-- "*" User
+
+package "Strategy" {
+  interface PlayerMatchingStrategy {
+    + suggestPlayers(match: Match, candidates: Collection<User>): List<User>
+  }
+  class BySkillLevelStrategy
+}
+
+BySkillLevelStrategy ..|> PlayerMatchingStrategy
+
+package "Observer / Notifications" {
+  class MatchEvent { + name: String }
+  interface NotificationObserver { + onMatchEvent(match: Match, event: MatchEvent) }
+  interface Notifier { + notify(user: User, match: Match, event: MatchEvent) }
+  class NotificationChannel { + name: String }
+
+package "Data" {
+  class ReferenceData {
+    + sport(name): SportType
+    + skill(name): SkillLevel
+    + channel(name): NotificationChannel
+    + event(name): MatchEvent
+    + defaultChannels(): List<NotificationChannel>
+  }
+}
+
+MatchService --> ReferenceData
+NotificationFacade --> ReferenceData
+ConsoleView --> ReferenceData
+  class NotificationFactory { + create(channel: NotificationChannel): Notifier }
+  class NotificationFacade { + notifyAllChannels(user: User, match: Match, event: MatchEvent) }
+  class EmailNotifier
+  class PushNotifier
+}
+
+EmailNotifier ..|> Notifier
+PushNotifier ..|> Notifier
+NotificationFactory --> Notifier
+NotificationFacade --> NotificationFactory
+Match "*" o-- "*" NotificationObserver
+
+package "Repository" {
+  interface UserRepository
+  interface MatchRepository
+  class InMemoryUserRepository
+  class InMemoryMatchRepository
+}
+
+InMemoryUserRepository ..|> UserRepository
+InMemoryMatchRepository ..|> MatchRepository
+
+package "Service" {
+  class MatchingService { - strategy: PlayerMatchingStrategy }
+  class MatchService
+}
+
+MatchingService --> PlayerMatchingStrategy
+MatchService --> MatchRepository
+MatchService --> UserRepository
+MatchService --> MatchingService
+MatchService --> NotificationFacade
+
+package "MVC" {
+  class UserController
+  class MatchController
+  class ConsoleView
+}
+
+UserController --> UserRepository
+MatchController --> MatchService
+ConsoleView ..|> NotificationObserver
+ConsoleView --> MatchController
+ConsoleView --> UserController
+
+@enduml
+
