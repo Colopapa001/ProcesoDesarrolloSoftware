@@ -1,0 +1,230 @@
+@startuml
+title TP - Sistema de Gestión de Partidos Deportivos (MVC + Patrones)
+
+package "MVC" {
+  class UserController
+  class MatchController
+  class ConsoleView
+  
+  UserController --> UserRepository : usa
+  MatchController --> MatchService : usa
+  ConsoleView --> UserController
+  ConsoleView --> MatchController
+  ConsoleView ..|> NotificationObserver : implementa
+}
+
+package "Model" {
+  class User {
+    - id: String
+    - username: String
+    - email: String
+    - passwordHash: String
+    - favoriteSport: SportType
+    - skillLevel: SkillLevel
+  }
+  
+  class Match {
+    - id: String
+    - sportType: SportType
+    - requiredPlayers: int
+    - durationMinutes: int
+    - location: String
+    - startDateTime: LocalDateTime
+    - players: List<User>
+    - observers: List<NotificationObserver>
+    - state: MatchState
+    + join(user: User)
+    + confirm()
+    + start()
+    + finish()
+    + cancel()
+    + addObserver(o: NotificationObserver)
+    + notifyObservers(event: MatchEvent)
+  }
+  
+  User --> SportType : referencia
+  User --> SkillLevel : referencia
+  Match --> SportType : referencia
+  Match "*" o-- "*" User : jugadores
+}
+
+package "Catálogos (desde JSON)" {
+  class ReferenceData {
+    + sport(name: String): SportType
+    + skill(name: String): SkillLevel
+    + channel(name: String): NotificationChannel
+    + event(name: String): MatchEvent
+    + defaultChannels(): List<NotificationChannel>
+  }
+  
+  class SportType { + name: String }
+  class SkillLevel { + name: String, + rank: int }
+  class NotificationChannel { + name: String }
+  class MatchEvent { + name: String }
+}
+
+ReferenceData --> SportType : proporciona
+ReferenceData --> SkillLevel : proporciona
+ReferenceData --> NotificationChannel : proporciona
+ReferenceData --> MatchEvent : proporciona
+
+package "State (Estados de Partido)" {
+  interface MatchState {
+    + name(): String
+    + onPlayerJoined(match: Match)
+    + confirm(match: Match)
+    + start(match: Match)
+    + finish(match: Match)
+    + cancel(match: Match)
+  }
+  
+  class NeedPlayersState
+  class AssembledState
+  class ConfirmedState
+  class InProgressState
+  class FinishedState
+  class CanceledState
+  
+  Match --> MatchState : tiene estado
+  MatchState <|.. NeedPlayersState
+  MatchState <|.. AssembledState
+  MatchState <|.. ConfirmedState
+  MatchState <|.. InProgressState
+  MatchState <|.. FinishedState
+  MatchState <|.. CanceledState
+}
+
+package "Strategy (Emparejamiento)" {
+  interface PlayerMatchingStrategy {
+    + suggestPlayers(match: Match, candidates: Collection<User>): List<User>
+  }
+  
+  class BySkillLevelStrategy
+  
+  class MatchingService {
+    - strategy: PlayerMatchingStrategy
+    + setStrategy(s: PlayerMatchingStrategy)
+    + suggestPlayers(match: Match, candidates: Collection<User>): List<User>
+  }
+  
+  PlayerMatchingStrategy <|.. BySkillLevelStrategy
+  MatchingService --> PlayerMatchingStrategy : usa
+}
+
+package "Observer + Factory + Facade (Notificaciones)" {
+  interface NotificationObserver {
+    + onMatchEvent(match: Match, event: MatchEvent)
+  }
+  
+  Match --> NotificationObserver : notifica
+  
+  interface Notifier {
+    + notify(user: User, match: Match, event: MatchEvent)
+  }
+  
+  class NotificationFactory {
+    + create(channel: NotificationChannel): Notifier
+  }
+  
+  class NotificationFacade {
+    - factory: NotificationFactory
+    + notifyAllChannels(user: User, match: Match, event: MatchEvent)
+  }
+  
+  class EmailNotifier
+  class PushNotifier
+  
+  NotificationFactory --> Notifier : crea
+  NotificationFacade --> NotificationFactory : usa
+  NotificationFacade --> Notifier : usa
+  Notifier <|.. EmailNotifier
+  Notifier <|.. PushNotifier
+  
+  note right of NotificationFacade
+    Facade simplifica la notificación
+    por múltiples canales (Email, Push)
+  end note
+  
+  note right of NotificationFactory
+    Factory crea instancias de Notifier
+    según el canal solicitado
+  end note
+}
+
+package "Repository" {
+  interface UserRepository {
+    + save(user: User): User
+    + findById(id: String): Optional<User>
+    + findByUsername(username: String): Optional<User>
+    + findAll(): Collection<User>
+  }
+  
+  interface MatchRepository {
+    + save(match: Match): Match
+    + findById(id: String): Optional<Match>
+    + findAll(): Collection<Match>
+    + findBySport(sportType: SportType): Collection<Match>
+  }
+  
+  class InMemoryUserRepository
+  class InMemoryMatchRepository
+  
+  UserRepository <|.. InMemoryUserRepository
+  MatchRepository <|.. InMemoryMatchRepository
+}
+
+package "Service" {
+  class MatchService {
+    - matchRepository: MatchRepository
+    - userRepository: UserRepository
+    - matchingService: MatchingService
+    - notificationFacade: NotificationFacade
+    + createMatch(...): Match
+    + joinMatch(matchId: String, username: String)
+    + suggestPlayers(matchId: String): List<User>
+    + confirm(matchId: String)
+    + startIfTime(matchId: String)
+    + finish(matchId: String)
+    + cancel(matchId: String)
+  }
+  
+  MatchService --> MatchRepository
+  MatchService --> UserRepository
+  MatchService --> MatchingService
+  MatchService --> NotificationFacade
+}
+
+' Integraciones clave
+MatchController --> MatchService
+UserController --> UserRepository
+ConsoleView --> NotificationObserver : implementa
+Match --> NotificationObserver : notifica eventos
+
+note right of Match
+  Estados requeridos:
+  - "Necesitamos jugadores" (NeedPlayersState)
+  - "Partido armado" (AssembledState)
+  - "Confirmado" (ConfirmedState)
+  - "En juego" (InProgressState)
+  - "Finalizado" (FinishedState)
+  - "Cancelado" (CanceledState)
+end note
+
+legend right
+  Patrones implementados:
+  - MVC: Controller, View, Model separados
+  - State: Ciclo de vida del Match
+  - Strategy: Emparejamiento de jugadores
+  - Observer: Eventos de notificación
+  - Factory: Creación de Notifiers
+  - Facade: Simplificación de notificaciones
+  - Repository: Abstracción de persistencia
+  
+  Datos desde JSON:
+  - ReferenceData carga SportType, SkillLevel,
+    NotificationChannel, MatchEvent desde
+    mockdata.json (no desde BD)
+end legend
+
+@enduml
+
