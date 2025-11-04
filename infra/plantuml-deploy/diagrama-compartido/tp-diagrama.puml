@@ -1,0 +1,349 @@
+@startuml
+!theme plain
+scale 0.65
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam defaultFontSize 7
+skinparam classFontSize 7
+skinparam classFontStyle bold
+skinparam roundcorner 2
+skinparam shadowing false
+skinparam linetype ortho
+skinparam maxMessageSize 40
+skinparam wrapWidth 100
+skinparam monochrome false
+skinparam nodePadding 2
+skinparam packagePadding 2
+skinparam arrowThickness 1
+skinparam classBorderThickness 1
+skinparam minClassWidth 0
+skinparam maxClassWidth 0
+skinparam nodesep 0.2
+skinparam ranksep 0.2
+skinparam horizontalPadding 5
+skinparam verticalPadding 5
+
+' Configuración para mejor visualización en pantalla
+skinparam dpi 300
+skinparam handwritten false
+skinparam arrowColor #000000
+skinparam backgroundColor #FFFFFF
+
+title Sistema de Gestión de Encuentros Deportivos\n(MVC + State, Strategy, Observer, Adapter)\nPágina 1: MVC y Dominio
+
+package "MVC" {
+  package "Registro" {
+    class RegistroController {
+      + registrarUsuario(...): Boolean
+      + validarUnicidad(email: String, username: String): Boolean
+    }
+    class RegistroView {
+      + mostrarFormulario()
+      + mostrarError(mensaje: String)
+      + mostrarExito()
+    }
+    class RegistroModel {
+      - usuario: Usuario
+      + crearUsuario(...): Usuario
+      + validarDatos(...): Boolean
+    }
+    RegistroController --> RegistroModel : usa
+    RegistroController --> RegistroView : actualiza
+  }
+
+  package "Autenticación" {
+    class AuthController {
+      + login(username: String, password: String): Usuario
+      + logout()
+      + obtenerUsuarioActual(): Usuario
+    }
+    class AuthView {
+      + mostrarLogin()
+      + mostrarError(mensaje: String)
+    }
+    class AuthModel {
+      - usuarioActual: Usuario
+      + autenticar(username: String, password: String): Usuario
+      + verificarCredenciales(username: String, password: String): Boolean
+    }
+    AuthController --> AuthModel : usa
+    AuthController --> AuthView : actualiza
+  }
+
+  package "Búsqueda" {
+    class BusquedaController {
+      + buscarPartidos(...): List<Partido>
+      + filtrarPorDisponibilidad(p: List<Partido>): List<Partido>
+    }
+    class BusquedaView {
+      + mostrarResultados(p: List<Partido>)
+      + mostrarFormularioBusqueda()
+      + mostrarDetallePartido(p: Partido)
+    }
+    class BusquedaModel {
+      - criterios: Map<String, Object>
+      + buscarPartidos(c: Map<String, Object>): List<Partido>
+      + aplicarFiltros(p: List<Partido>, f: Map<String, Object>): List<Partido>
+    }
+    BusquedaController --> BusquedaModel : usa
+    BusquedaController --> BusquedaView : actualiza
+  }
+
+  package "Partido" {
+    class PartidoController {
+      + crearPartido(...): Partido
+      + inscribirJugador(p: Partido, u: Usuario): Boolean
+      + cancelarPartido(p: Partido): Boolean
+      + confirmarPartido(p: Partido): Boolean
+      + registrarEstadisticas(p: Partido, s: String): Boolean
+      + agregarComentario(p: Partido, c: String): Boolean
+    }
+    class PartidoView {
+      + mostrarPartido(p: Partido)
+      + mostrarFormularioCreacion()
+      + actualizarEstado(e: String)
+      + actualizarCupos(disp: int, req: int)
+      + mostrarEstadisticas(s: String)
+      + mostrarComentarios(c: List<String>)
+    }
+    class PartidoModel {
+      - partidoActual: Partido
+      - partidos: List<Partido>
+      + crearPartido(...): Partido
+      + inscribirJugador(p: Partido, u: Usuario): Boolean
+      + verificarCompletitud(p: Partido): Boolean
+      + obtenerSugerencias(p: Partido): List<Usuario>
+      + notificarCambioEstado(p: Partido, e: String)
+    }
+    PartidoController --> PartidoModel : usa
+    PartidoController --> PartidoView : actualiza
+  }
+
+  package "Catálogos" {
+    class CatalogoController {
+      + obtenerDeportes(): List<Deporte>
+      + obtenerNiveles(): List<Nivel>
+    }
+    class CatalogoView {
+      + mostrarDeportes(deportes: List<Deporte>)
+      + mostrarNiveles(niveles: List<Nivel>)
+    }
+    class CatalogoModel {
+      + obtenerDeportes(): List<Deporte>
+      + obtenerNiveles(): List<Nivel>
+    }
+    CatalogoController --> CatalogoModel : usa
+    CatalogoController --> CatalogoView : actualiza
+  }
+}
+
+package "Dominio" {
+  class Usuario {
+    - id: Long
+    - username: String
+    - email: String
+    - password: String
+    - nivel: Nivel
+    - deporteFavorito: Deporte
+    + getters
+    + validarPassword(p: String): Boolean
+  }
+
+  package "Catálogos (desde BD)" {
+    class Nivel {
+      - id: Long
+      - nombre: String
+      + getters
+    }
+    class Deporte {
+      - id: Long
+      - nombre: String
+      + getters
+    }
+  }
+
+  class Partido {
+    - id: Long
+    - deporte: Deporte
+    - organizador: Usuario
+    - jugadoresRequeridos: int
+    - jugadores: List<Usuario>
+    - estado: PartidoState
+    - ubicacion: String
+    - fechaHora: Date
+    - duracion: int
+    - nivelMin: Nivel
+    - nivelMax: Nivel
+    - estadisticas: String
+    - comentarios: List<String>
+    - fechaCreacion: Date
+    + getters
+    + agregarJugador(u: Usuario): Boolean
+    + removerJugador(u: Usuario): Boolean
+    + verificarCompletitud(): Boolean
+    + setEstado(s: PartidoState)
+    + cancelar()
+    + confirmar()
+    + registrarEstadisticas(s: String)
+    + agregarComentario(c: String)
+    + verificarHorarioComienzo(): Boolean
+    + verificarHorarioFinalizacion(): Boolean
+    + puedeInscribirJugador(u: Usuario): Boolean
+  }
+
+  Usuario --> Nivel : referencia
+  Usuario --> Deporte : referencia
+  Partido --> Deporte : referencia
+  Partido --> Usuario : organizador
+  Partido --> Usuario : jugadores
+}
+
+PartidoModel --> Partido : gestiona
+BusquedaModel --> Partido : busca
+RegistroModel --> Usuario : crea
+AuthModel --> Usuario : autentica
+CatalogoModel --> Deporte : obtiene
+CatalogoModel --> Nivel : obtiene
+
+newpage
+
+title Sistema de Gestión de Encuentros Deportivos\n(MVC + State, Strategy, Observer, Adapter)\nPágina 2: State y Strategy
+
+package "State (Estados de Partido)" {
+  interface PartidoState {
+    + onJugadorAgregado(p: Partido)
+    + onJugadorRemovido(p: Partido)
+    + onTiempoComienzo(p: Partido)
+    + onTiempoFinalizacion(p: Partido)
+    + confirmar(p: Partido)
+    + cancelar(p: Partido)
+    + puedeAgregarJugador(p: Partido): Boolean
+    + puedeConfirmar(p: Partido): Boolean
+    + puedeCancelar(p: Partido): Boolean
+    + getNombreEstado(): String
+  }
+
+  class NecesitamosJugadores {
+    + onJugadorAgregado(p: Partido)
+    + puedeAgregarJugador(p: Partido): Boolean
+    + getNombreEstado(): String
+  }
+  class PartidoArmado {
+    + confirmar(p: Partido)
+    + puedeConfirmar(p: Partido): Boolean
+    + getNombreEstado(): String
+  }
+  class Confirmado {
+    + onTiempoComienzo(p: Partido)
+    + cancelar(p: Partido)
+    + puedeCancelar(p: Partido): Boolean
+    + getNombreEstado(): String
+  }
+  class EnJuego {
+    + onTiempoFinalizacion(p: Partido)
+    + puedeAgregarJugador(p: Partido): Boolean
+    + getNombreEstado(): String
+  }
+  class Finalizado {
+    + puedeAgregarJugador(p: Partido): Boolean
+    + puedeConfirmar(p: Partido): Boolean
+    + puedeCancelar(p: Partido): Boolean
+    + getNombreEstado(): String
+  }
+  class Cancelado {
+    + puedeAgregarJugador(p: Partido): Boolean
+    + puedeConfirmar(p: Partido): Boolean
+    + puedeCancelar(p: Partido): Boolean
+    + getNombreEstado(): String
+  }
+
+  Partido --> PartidoState
+  PartidoState <|.. NecesitamosJugadores
+  PartidoState <|.. PartidoArmado
+  PartidoState <|.. Confirmado
+  PartidoState <|.. EnJuego
+  PartidoState <|.. Finalizado
+  PartidoState <|.. Cancelado
+}
+
+package "Strategy (Emparejamiento)" {
+  interface EmparejamientoStrategy {
+    + emparejar(c: List<Usuario>, p: Partido): List<Usuario>
+  }
+  class EmparejamientoPorNivel {
+    + emparejar(c: List<Usuario>, p: Partido): List<Usuario>
+  }
+  class EmparejamientoPorCercania {
+    + emparejar(c: List<Usuario>, p: Partido): List<Usuario>
+  }
+  class EmparejamientoPorHistorial {
+    + emparejar(c: List<Usuario>, p: Partido): List<Usuario>
+  }
+
+  EmparejamientoStrategy <|.. EmparejamientoPorNivel
+  EmparejamientoStrategy <|.. EmparejamientoPorCercania
+  EmparejamientoStrategy <|.. EmparejamientoPorHistorial
+
+  class MatchmakingService {
+    - strategy: EmparejamientoStrategy
+    + setStrategy(s: EmparejamientoStrategy)
+    + sugerir(p: Partido): List<Usuario>
+    + filtrarPorNivel(c: List<Usuario>, p: Partido): List<Usuario>
+  }
+
+  MatchmakingService --> EmparejamientoStrategy
+}
+
+Partido --> PartidoState
+PartidoModel --> MatchmakingService : consulta sugerencias
+
+newpage
+
+title Sistema de Gestión de Encuentros Deportivos\n(MVC + State, Strategy, Observer, Adapter)\nPágina 3: Observer y Adapter
+
+package "Observer + Adapter (Notificaciones)" {
+  interface Observer {
+    + update(e: String, p: Partido)
+  }
+
+  class NotificacionSubject {
+    - observers: List<Observer>
+    + attach(o: Observer)
+    + detach(o: Observer)
+    + notify(e: String, p: Partido)
+  }
+
+  NotificacionSubject <|-- Partido : subject
+
+  interface NotificationClient {
+    + send(dest: String, asunto: String, cuerpo: String)
+  }
+
+  class JavaMailAdapter implements NotificationClient {
+    + send(dest: String, asunto: String, cuerpo: String)
+  }
+  class FirebasePushAdapter implements NotificationClient {
+    + send(dest: String, asunto: String, cuerpo: String)
+  }
+
+  class EmailObserver implements Observer {
+    - client: NotificationClient
+    + update(e: String, p: Partido)
+    + construirMensaje(e: String, p: Partido): String
+  }
+  class PushObserver implements Observer {
+    - client: NotificationClient
+    + update(e: String, p: Partido)
+    + construirMensaje(e: String, p: Partido): String
+  }
+
+  EmailObserver --> NotificationClient
+  PushObserver --> NotificationClient
+}
+
+PartidoModel --> NotificacionSubject : emite eventos
+PartidoController --> NotificacionSubject : alta de observers
+NotificacionSubject <|-- Partido : subject
+
+@enduml
+
