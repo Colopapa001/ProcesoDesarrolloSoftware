@@ -29,5 +29,6 @@ public class MatchController {
     public void finish(String matchId) { matchService.finish(matchId); }
     public void cancel(String matchId) { matchService.cancel(matchId); }
     public List<User> suggestions(String matchId) { return matchService.suggestPlayers(matchId); }
+    public Collection<Match> findMyMatches(String username) { return matchService.findMatchesByUser(username); }
 }
 

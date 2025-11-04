@@ -14,7 +14,9 @@ import com.sportsmatching.service.SessionService;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Scanner;
 
 public class InteractiveMenu {
@@ -283,8 +285,86 @@ public class InteractiveMenu {
 
     private void showMyMatches() {
         System.out.println("\n=== MIS PARTIDOS ===");
-        // TODO: Implementar cuando tengamos método para buscar partidos por usuario
-        System.out.println("Funcionalidad en desarrollo");
+        
+        if (!sessionService.isLoggedIn()) {
+            System.out.println("❌ Debe iniciar sesión para ver sus partidos");
+            return;
+        }
+        
+        User currentUser = sessionService.getCurrentUser();
+        Collection<Match> myMatches = matchController.findMyMatches(currentUser.getUsername());
+        
+        if (myMatches.isEmpty()) {
+            System.out.println("No tienes partidos registrados.");
+            System.out.println("¡Crea un partido o únete a uno existente!");
+            return;
+        }
+        
+        // Separar partidos por estado
+        List<Match> activeMatches = new ArrayList<>();
+        List<Match> finishedMatches = new ArrayList<>();
+        List<Match> canceledMatches = new ArrayList<>();
+        
+        for (Match match : myMatches) {
+            String stateName = match.getState().name();
+            if (stateName.equals("FINISHED")) {
+                finishedMatches.add(match);
+            } else if (stateName.equals("CANCELED")) {
+                canceledMatches.add(match);
+            } else {
+                activeMatches.add(match);
+            }
+        }
+        
+        // Mostrar partidos activos
+        if (!activeMatches.isEmpty()) {
+            System.out.println("\n📅 PARTIDOS ACTIVOS (" + activeMatches.size() + "):");
+            System.out.println("-".repeat(60));
+            int i = 1;
+            for (Match match : activeMatches) {
+                System.out.println("\n" + i + ". " + match.getSportType().getName());
+                System.out.println("   ID: " + match.getShortId());
+                System.out.println("   Ubicación: " + match.getLocationDescription());
+                System.out.println("   Fecha: " + match.getStartDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                System.out.println("   Jugadores: " + match.getPlayers().size() + "/" + match.getRequiredPlayers());
+                System.out.println("   Estado: " + match.getState().name());
+                System.out.println("   Duración: " + match.getDurationMinutes() + " minutos");
+                i++;
+            }
+        }
+        
+        // Mostrar partidos finalizados
+        if (!finishedMatches.isEmpty()) {
+            System.out.println("\n\n🏁 PARTIDOS FINALIZADOS (" + finishedMatches.size() + "):");
+            System.out.println("-".repeat(60));
+            int i = 1;
+            for (Match match : finishedMatches) {
+                System.out.println("\n" + i + ". " + match.getSportType().getName());
+                System.out.println("   ID: " + match.getShortId());
+                System.out.println("   Ubicación: " + match.getLocationDescription());
+                System.out.println("   Fecha: " + match.getStartDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                System.out.println("   Jugadores: " + match.getPlayers().size() + "/" + match.getRequiredPlayers());
+                i++;
+            }
+        }
+        
+        // Mostrar partidos cancelados
+        if (!canceledMatches.isEmpty()) {
+            System.out.println("\n\n❌ PARTIDOS CANCELADOS (" + canceledMatches.size() + "):");
+            System.out.println("-".repeat(60));
+            int i = 1;
+            for (Match match : canceledMatches) {
+                System.out.println("\n" + i + ". " + match.getSportType().getName());
+                System.out.println("   ID: " + match.getShortId());
+                System.out.println("   Ubicación: " + match.getLocationDescription());
+                System.out.println("   Fecha: " + match.getStartDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                System.out.println("   Jugadores: " + match.getPlayers().size() + "/" + match.getRequiredPlayers());
+                i++;
+            }
+        }
+        
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println("Total de partidos: " + myMatches.size());
     }
 
     private int readInt() {

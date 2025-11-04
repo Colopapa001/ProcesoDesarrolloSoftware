@@ -2,6 +2,7 @@ package com.sportsmatching.repository;
 
 import com.sportsmatching.model.Match;
 import com.sportsmatching.model.SportType;
+import com.sportsmatching.model.User;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -35,6 +36,13 @@ public class InMemoryMatchRepository implements MatchRepository {
     @Override
     public Collection<Match> findBySport(SportType sportType) {
         return matchesById.values().stream().filter(m -> m.getSportType().equals(sportType)).collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<Match> findByUser(User user) {
+        return matchesById.values().stream()
+                .filter(m -> m.getPlayers().contains(user))
+                .collect(Collectors.toList());
     }
 }
 

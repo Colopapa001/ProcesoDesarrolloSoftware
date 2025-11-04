@@ -76,5 +76,10 @@ public class MatchService {
     public void startIfTime(String matchId) { matchRepository.findById(matchId).orElseThrow().start(); }
     public void finish(String matchId) { matchRepository.findById(matchId).orElseThrow().finish(); }
     public void cancel(String matchId) { matchRepository.findById(matchId).orElseThrow().cancel(); }
+    
+    public Collection<Match> findMatchesByUser(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow();
+        return matchRepository.findByUser(user);
+    }
 }
 
