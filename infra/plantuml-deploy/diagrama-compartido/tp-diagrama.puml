@@ -25,7 +25,6 @@ skinparam verticalPadding 5
 
 ' Configuración para mejor visualización en pantalla
 skinparam dpi 300
-skinparam handwritten false
 skinparam arrowColor #000000
 skinparam backgroundColor #FFFFFF
 
