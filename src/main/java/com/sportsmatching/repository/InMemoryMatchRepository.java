@@ -15,7 +15,20 @@ public class InMemoryMatchRepository implements MatchRepository {
         return match;
     }
 
-    @Override public Optional<Match> findById(String id) { return Optional.ofNullable(matchesById.get(id)); }
+    @Override 
+    public Optional<Match> findById(String id) {
+        // Buscar por ID completo primero
+        Match match = matchesById.get(id);
+        if (match != null) {
+            return Optional.of(match);
+        }
+        // Si no se encuentra, buscar por código sin prefijo (permite ingresar solo "A3B9X2" en lugar de "MAT-A3B9X2")
+        if (!id.startsWith("MAT-") && id.length() == 6) {
+            String fullId = "MAT-" + id.toUpperCase();
+            return Optional.ofNullable(matchesById.get(fullId));
+        }
+        return Optional.empty();
+    }
 
     @Override public Collection<Match> findAll() { return Collections.unmodifiableCollection(matchesById.values()); }
 

@@ -65,7 +65,8 @@ public class EmailNotifier implements Notifier {
         
         body.append("Detalles del partido:\n");
         body.append("- Deporte: ").append(match.getSportType().getName()).append("\n");
-        body.append("- Ubicación: ").append(match.getLocation()).append("\n");
+        body.append("- Ubicación: ").append(match.getLocationDescription()).append("\n");
+        body.append("- Coordenadas: ").append(match.getLocation()).append("\n");
         body.append("- Fecha y hora: ").append(match.getStartDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))).append("\n");
         body.append("- Jugadores requeridos: ").append(match.getRequiredPlayers()).append("\n");
         body.append("- Jugadores actuales: ").append(match.getPlayers().size()).append("\n");

@@ -10,14 +10,16 @@ public class User {
     private final String passwordHash;
     private final SportType favoriteSport;
     private final SkillLevel skillLevel;
+    private final Location location;
 
-    public User(String username, String email, String passwordHash, SportType favoriteSport, SkillLevel skillLevel) {
+    public User(String username, String email, String passwordHash, SportType favoriteSport, SkillLevel skillLevel, Location location) {
         this.id = UUID.randomUUID().toString();
         this.username = Objects.requireNonNull(username);
         this.email = Objects.requireNonNull(email);
         this.passwordHash = Objects.requireNonNull(passwordHash);
         this.favoriteSport = favoriteSport;
         this.skillLevel = skillLevel;
+        this.location = Objects.requireNonNull(location);
     }
 
     public String getId() { return id; }
@@ -26,5 +28,6 @@ public class User {
     public String getPasswordHash() { return passwordHash; }
     public SportType getFavoriteSport() { return favoriteSport; }
     public SkillLevel getSkillLevel() { return skillLevel; }
+    public Location getLocation() { return location; }
 }
 

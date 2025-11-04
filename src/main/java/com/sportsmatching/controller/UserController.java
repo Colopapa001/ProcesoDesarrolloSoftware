@@ -14,9 +14,9 @@ public class UserController {
 
     public UserController(UserRepository userRepository) { this.userRepository = userRepository; }
 
-    public User registerUser(String username, String email, String password, SportType favoriteSport, SkillLevel skillLevel) {
+    public User registerUser(String username, String email, String password, SportType favoriteSport, SkillLevel skillLevel, com.sportsmatching.model.Location location) {
         String hash = sha256(password);
-        User user = new User(username, email, hash, favoriteSport, skillLevel);
+        User user = new User(username, email, hash, favoriteSport, skillLevel, location);
         return userRepository.save(user);
     }
 

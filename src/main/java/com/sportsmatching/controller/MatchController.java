@@ -14,11 +14,15 @@ public class MatchController {
 
     public MatchController(MatchService matchService) { this.matchService = matchService; }
 
-    public Match create(SportType sportType, int requiredPlayers, int durationMinutes, String location, LocalDateTime start) {
-        return matchService.createMatch(sportType, requiredPlayers, durationMinutes, location, start);
+    public Match create(SportType sportType, int requiredPlayers, int durationMinutes, com.sportsmatching.model.Location location, String locationDescription, LocalDateTime start) {
+        return matchService.createMatch(sportType, requiredPlayers, durationMinutes, location, locationDescription, start);
     }
 
     public Collection<Match> search(SportType sportType) { return matchService.findBySport(sportType); }
+    
+    public Collection<Match> searchNearby(SportType sportType, com.sportsmatching.model.Location userLocation) {
+        return matchService.findNearby(sportType, userLocation);
+    }
     public void join(String matchId, String username) { matchService.joinMatch(matchId, username); }
     public void confirm(String matchId) { matchService.confirm(matchId); }
     public void startIfTime(String matchId) { matchService.startIfTime(matchId); }

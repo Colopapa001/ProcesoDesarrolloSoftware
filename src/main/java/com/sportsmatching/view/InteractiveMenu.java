@@ -3,10 +3,12 @@ package com.sportsmatching.view;
 import com.sportsmatching.controller.MatchController;
 import com.sportsmatching.controller.UserController;
 import com.sportsmatching.data.ReferenceData;
+import com.sportsmatching.model.Location;
 import com.sportsmatching.model.Match;
 import com.sportsmatching.model.SkillLevel;
 import com.sportsmatching.model.SportType;
 import com.sportsmatching.model.User;
+import com.sportsmatching.service.LocationService;
 import com.sportsmatching.service.SessionService;
 
 import java.time.LocalDateTime;
@@ -21,6 +23,7 @@ public class InteractiveMenu {
     private final MatchController matchController;
     private final SessionService sessionService;
     private final ReferenceData ref;
+    private final LocationService locationService;
 
     public InteractiveMenu(UserController userController, MatchController matchController, SessionService sessionService) {
         this.scanner = new Scanner(System.in);
@@ -28,6 +31,7 @@ public class InteractiveMenu {
         this.matchController = matchController;
         this.sessionService = sessionService;
         this.ref = ReferenceData.get();
+        this.locationService = new LocationService();
     }
 
     public void run() {
@@ -123,8 +127,16 @@ public class InteractiveMenu {
             default -> ref.skill("INTERMEDIATE");
         };
 
+        System.out.println("\n=== UBICACIÓN ===");
+        System.out.println("Ingrese sus coordenadas (puede usar Google Maps para obtenerlas):");
+        System.out.print("Latitud (-90 a 90, ej. -34.6037 para Buenos Aires): ");
+        double lat = readDouble();
+        System.out.print("Longitud (-180 a 180, ej. -58.3816 para Buenos Aires): ");
+        double lon = readDouble();
+        Location userLocation = new Location(lat, lon);
+
         try {
-            userController.registerUser(username, email, password, sport, level);
+            userController.registerUser(username, email, password, sport, level, userLocation);
             System.out.println("✓ Usuario registrado exitosamente");
         } catch (Exception e) {
             System.out.println("❌ Error al registrar: " + e.getMessage());
@@ -166,8 +178,16 @@ public class InteractiveMenu {
         System.out.print("Duración (minutos): ");
         int duration = readInt();
 
-        System.out.print("Ubicación: ");
-        String location = scanner.nextLine().trim();
+        System.out.println("\n=== UBICACIÓN DEL PARTIDO ===");
+        System.out.print("Descripción de la ubicación (ej. 'Cancha de fútbol en Parque Centenario'): ");
+        String locationDescription = scanner.nextLine().trim();
+        
+        System.out.println("Coordenadas del partido:");
+        System.out.print("Latitud (-90 a 90): ");
+        double lat = readDouble();
+        System.out.print("Longitud (-180 a 180): ");
+        double lon = readDouble();
+        Location matchLocation = new Location(lat, lon);
 
         System.out.print("Fecha y hora (dd/MM/yyyy HH:mm): ");
         String dateTimeStr = scanner.nextLine().trim();
@@ -180,13 +200,14 @@ public class InteractiveMenu {
         }
 
         try {
-            Match match = matchController.create(sport, requiredPlayers, duration, location, dateTime);
+            Match match = matchController.create(sport, requiredPlayers, duration, matchLocation, locationDescription, dateTime);
             // Notificaciones se envían automáticamente por email desde MatchService
             
             System.out.println("✓ Partido creado exitosamente");
             System.out.println("  ID: " + match.getId());
             System.out.println("  Deporte: " + match.getSportType().getName());
-            System.out.println("  Ubicación: " + match.getLocation());
+            System.out.println("  Ubicación: " + match.getLocationDescription());
+            System.out.println("  Coordenadas: " + match.getLocation());
             System.out.println("  Fecha: " + match.getStartDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         } catch (Exception e) {
             System.out.println("❌ Error al crear partido: " + e.getMessage());
@@ -195,31 +216,50 @@ public class InteractiveMenu {
 
     private void searchMatches() {
         System.out.println("\n=== BUSCAR PARTIDOS ===");
+        
+        if (!sessionService.isLoggedIn()) {
+            System.out.println("❌ Debe iniciar sesión para buscar partidos");
+            return;
+        }
+        
+        User currentUser = sessionService.getCurrentUser();
+        Location userLocation = currentUser.getLocation();
+        
         System.out.println("Deportes disponibles:");
         int i = 1;
         for (SportType sport : ref.allSports()) {
             System.out.println(i + ". " + sport.getName());
             i++;
         }
-        System.out.print("Seleccione deporte (número): ");
+        System.out.print("Seleccione deporte (número, 0 para todos): ");
         int sportChoice = readInt() - 1;
-        SportType sport = ref.allSports().stream().skip(sportChoice).findFirst()
-                .orElse(ref.sport("FOOTBALL"));
+        SportType sport = null;
+        if (sportChoice >= 0 && sportChoice < ref.allSports().size()) {
+            sport = ref.allSports().stream().skip(sportChoice).findFirst().orElse(null);
+        }
 
-        Collection<Match> matches = matchController.search(sport);
+        Collection<Match> matches = matchController.searchNearby(sport, userLocation);
         
         if (matches.isEmpty()) {
-            System.out.println("No hay partidos disponibles para " + sport.getName());
+            String sportName = sport != null ? sport.getName() : "ningún deporte";
+            System.out.println("No hay partidos disponibles para " + sportName);
         } else {
-            System.out.println("\nPartidos encontrados:");
+            System.out.println("\n📍 Partidos encontrados (ordenados por cercanía):");
+            System.out.println("Tu ubicación: " + userLocation);
+            System.out.println("-".repeat(60));
             i = 1;
             for (Match match : matches) {
+                double distance = locationService.calculateDistance(userLocation, match.getLocation());
+                String distanceStr = locationService.formatDistance(distance);
+                
                 System.out.println("\n" + i + ". " + match.getSportType().getName());
-                System.out.println("   ID: " + match.getId());
-                System.out.println("   Ubicación: " + match.getLocation());
-                System.out.println("   Fecha: " + match.getStartDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-                System.out.println("   Jugadores: " + match.getPlayers().size() + "/" + match.getRequiredPlayers());
-                System.out.println("   Estado: " + match.getState().name());
+                System.out.println("   ID: " + match.getShortId());
+                System.out.println("   Ubicación: " + match.getLocationDescription());
+                System.out.println("   Coordenadas: " + match.getLocation());
+                System.out.println("   📏 Distancia: " + distanceStr);
+                System.out.println("   📅 Fecha: " + match.getStartDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                System.out.println("   👥 Jugadores: " + match.getPlayers().size() + "/" + match.getRequiredPlayers());
+                System.out.println("   ⚡ Estado: " + match.getState().name());
                 i++;
             }
         }
@@ -227,8 +267,9 @@ public class InteractiveMenu {
 
     private void joinMatch() {
         System.out.println("\n=== UNIRSE A PARTIDO ===");
+        System.out.println("Ejemplo de ID: MAT-A3B9X2 (o solo A3B9X2)");
         System.out.print("Ingrese el ID del partido: ");
-        String matchId = scanner.nextLine().trim();
+        String matchId = scanner.nextLine().trim().toUpperCase();
 
         User user = sessionService.getCurrentUser();
         try {
@@ -251,6 +292,17 @@ public class InteractiveMenu {
             return Integer.parseInt(scanner.nextLine().trim());
         } catch (NumberFormatException e) {
             return -1;
+        }
+    }
+    
+    private double readDouble() {
+        while (true) {
+            try {
+                String input = scanner.nextLine().trim();
+                return Double.parseDouble(input);
+            } catch (NumberFormatException e) {
+                System.out.print("❌ Entrada inválida. Ingrese un número: ");
+            }
         }
     }
 }

@@ -1,10 +1,29 @@
 @startuml
 title TP - Sistema de Gestión de Partidos Deportivos (MVC + Patrones)
 
+skinparam packageStyle rectangle
+skinparam maxMessageSize 60
+skinparam linetype ortho
+
+' ========== PÁGINA 1: MVC y Model ==========
 package "MVC" {
-  class UserController
-  class MatchController
-  class InteractiveMenu
+  class UserController {
+    + registerUser(username: String, email: String, password: String, favoriteSport: SportType, skillLevel: SkillLevel, location: Location): User
+  }
+  class MatchController {
+    + create(sport: SportType, requiredPlayers: int, duration: int, location: Location, locationDescription: String, start: LocalDateTime): Match
+    + search(sport: SportType): Collection<Match>
+    + searchNearby(sport: SportType, userLocation: Location): Collection<Match>
+    + join(matchId: String, username: String)
+  }
+  class InteractiveMenu {
+    + run(): void
+    - register(): void
+    - login(): void
+    - createMatch(): void
+    - searchMatches(): void
+    - joinMatch(): void
+  }
   
   UserController --> UserRepository : usa
   MatchController --> MatchService : usa
@@ -21,6 +40,7 @@ package "Model" {
     - passwordHash: String
     - favoriteSport: SportType
     - skillLevel: SkillLevel
+    - location: Location
   }
   
   class Match {
@@ -28,7 +48,8 @@ package "Model" {
     - sportType: SportType
     - requiredPlayers: int
     - durationMinutes: int
-    - location: String
+    - location: Location
+    - locationDescription: String
     - startDateTime: LocalDateTime
     - players: List<User>
     - observers: List<NotificationObserver>
@@ -42,12 +63,24 @@ package "Model" {
     + notifyObservers(event: MatchEvent)
   }
   
+  class Location {
+    - latitude: double
+    - longitude: double
+    + getLatitude(): double
+    + getLongitude(): double
+  }
+  
   User --> SportType : referencia
   User --> SkillLevel : referencia
+  User --> Location : tiene
   Match --> SportType : referencia
+  Match --> Location : tiene
   Match "*" o-- "*" User : jugadores
 }
 
+newpage
+
+' ========== PÁGINA 2: Catálogos, State y Strategy ==========
 package "Catálogos (desde JSON)" {
   class ReferenceData {
     + sport(name: String): SportType
@@ -111,7 +144,9 @@ package "Strategy (Emparejamiento)" {
     + suggestPlayers(match: Match, candidates: Collection<User>): List<User>
   }
   
-  class BySkillLevelStrategy
+  class BySkillLevelStrategy {
+    + suggestPlayers(match: Match, candidates: Collection<User>): List<User>
+  }
   
   class MatchingService {
     - strategy: PlayerMatchingStrategy
@@ -123,6 +158,9 @@ package "Strategy (Emparejamiento)" {
   MatchingService --> PlayerMatchingStrategy : usa
 }
 
+newpage
+
+' ========== PÁGINA 3: Notificaciones y Repository ==========
 package "Observer + Factory + Facade (Notificaciones)" {
   interface NotificationObserver {
     + onMatchEvent(match: Match, event: MatchEvent)
@@ -186,15 +224,21 @@ package "Repository" {
   MatchRepository <|.. InMemoryMatchRepository
 }
 
+newpage
+
+' ========== PÁGINA 4: Service y Utilidades ==========
 package "Service" {
   class MatchService {
     - matchRepository: MatchRepository
     - userRepository: UserRepository
     - matchingService: MatchingService
     - notificationFacade: NotificationFacade
-    + createMatch(sport: SportType, requiredPlayers: int, duration: int, location: String, start: LocalDateTime): Match
+    - locationService: LocationService
+    + createMatch(sport: SportType, requiredPlayers: int, duration: int, location: Location, locationDescription: String, start: LocalDateTime): Match
     + joinMatch(matchId: String, username: String)
     + suggestPlayers(matchId: String): List<User>
+    + findNearby(sport: SportType, userLocation: Location): Collection<Match>
+    + getDistance(userLocation: Location, match: Match): double
     + confirm(matchId: String)
     + startIfTime(matchId: String)
     + finish(matchId: String)
@@ -210,6 +254,11 @@ package "Service" {
     + isLoggedIn(): boolean
   }
   
+  class LocationService {
+    + calculateDistance(loc1: Location, loc2: Location): double
+    + formatDistance(distanceKm: double): String
+  }
+  
   class EmailService {
     - smtpHost: String
     - smtpPort: int
@@ -223,8 +272,17 @@ package "Service" {
   MatchService --> UserRepository
   MatchService --> MatchingService
   MatchService --> NotificationFacade
+  MatchService --> LocationService : usa
   SessionService --> UserRepository
   EmailNotifier --> EmailService : usa
+}
+
+package "Utilidades" {
+  class MatchIdGenerator {
+    {static} + generate(): String
+  }
+  
+  MatchIdGenerator ..> Match : genera ID
 }
 
 ' Integraciones clave
@@ -252,6 +310,11 @@ legend right
   - Factory: Creación de Notifiers
   - Facade: Simplificación de notificaciones
   - Repository: Abstracción de persistencia
+  
+  Funcionalidades:
+  - Búsqueda por cercanía (LocationService)
+  - IDs legibles (MatchIdGenerator)
+  - Notificaciones por email real
   
   Datos desde JSON:
   - ReferenceData carga SportType, SkillLevel,
