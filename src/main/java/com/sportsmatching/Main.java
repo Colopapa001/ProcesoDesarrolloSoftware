@@ -14,6 +14,17 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Inicializando sistema...");
 
+        // Configurar valores por defecto para email si no están establecidos
+        if (System.getProperty("email.provider") == null) {
+            System.setProperty("email.provider", "outlook");
+        }
+        if (System.getProperty("email.username") == null) {
+            System.setProperty("email.username", "pdstpo@outlook.com");
+        }
+        if (System.getProperty("email.password") == null) {
+            System.setProperty("email.password", "Contra123");
+        }
+
         InMemoryUserRepository userRepository = new InMemoryUserRepository();
         InMemoryMatchRepository matchRepository = new InMemoryMatchRepository();
 
@@ -28,7 +39,7 @@ public class Main {
         
         // Mostrar configuración de email
         String emailUser = System.getProperty("email.username");
-        String emailProvider = System.getProperty("email.provider", "gmail");
+        String emailProvider = System.getProperty("email.provider", "outlook");
         
         if (emailUser == null || emailUser.isEmpty()) {
             System.out.println("\n⚠ ATENCIÓN: Email no configurado.");

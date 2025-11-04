@@ -1,0 +1,28 @@
+========================================
+EMAIL SIMULADO / GUARDADO EN ARCHIVO
+========================================
+
+Para: joseipapa@hotmail.com
+Asunto: ⚽ Nuevo partido disponible para tu deporte favorito
+Fecha: 04/11/2025 15:28:48
+
+========================================
+
+Hola papa,
+
+¡Hay un nuevo partido disponible para tu deporte favorito!
+
+Detalles del partido:
+- Deporte: FOOTBALL
+- Ubicación: -37.109831
+- Coordenadas: (-37,109831, -56,881279)
+- Fecha y hora: 04/11/2025 15:28
+- Jugadores requeridos: 2
+- Jugadores actuales: 0
+- Estado: Necesitamos jugadores
+
+¡Únete al partido ahora!
+Saludos,
+Sistema de Gestión de Partidos Deportivos
+
+========================================

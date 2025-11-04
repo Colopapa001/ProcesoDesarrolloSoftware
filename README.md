@@ -25,7 +25,7 @@ mvn clean compile exec:java
 
 ## Configuración de Email
 
-El sistema soporta múltiples proveedores de email o puede guardar emails en archivos.
+El sistema soporta múltiples proveedores de email o puede guardar emails en archivos. Puedes configurar el email usando **variables de entorno** (recomendado) o **propiedades del sistema**.
 
 ### Opción 1: Sin configuración (Modo Archivo - Recomendado para desarrollo)
 
@@ -37,33 +37,87 @@ mvn exec:java
 
 Los archivos se guardan como: `emails/email_usuario_at_dominio_com_20241103_143022.txt`
 
-### Opción 2: Gmail
+### Opción 2: Variables de Entorno (Recomendado)
 
+Las variables de entorno son más seguras y fáciles de configurar. El sistema las prioriza sobre las propiedades del sistema.
+
+#### Script Automático (Windows PowerShell):
+```powershell
+# Ejecuta el script de configuración
+.\setup-email.ps1
+
+# Luego ejecuta la aplicación
+mvn exec:java
+```
+
+#### Windows PowerShell (Manual):
+```powershell
+# Configurar variables de entorno
+$env:EMAIL_PROVIDER="outlook"
+$env:EMAIL_USERNAME="tu-email@outlook.com"
+$env:EMAIL_PASSWORD="tu-password"
+
+# Ejecutar la aplicación
+mvn exec:java
+```
+
+#### Windows CMD:
+```cmd
+set EMAIL_PROVIDER=outlook
+set EMAIL_USERNAME=tu-email@outlook.com
+set EMAIL_PASSWORD=tu-password
+mvn exec:java
+```
+
+#### Linux/Mac:
+```bash
+export EMAIL_PROVIDER=outlook
+export EMAIL_USERNAME=tu-email@outlook.com
+export EMAIL_PASSWORD=tu-password
+mvn exec:java
+```
+
+#### Variables de entorno disponibles:
+- `EMAIL_PROVIDER`: `gmail`, `outlook`, `yahoo`, o proveedor personalizado
+- `EMAIL_USERNAME`: Tu dirección de email
+- `EMAIL_PASSWORD`: Tu contraseña o App Password
+- `SMTP_HOST`: (Opcional) Host SMTP personalizado
+- `SMTP_PORT`: (Opcional) Puerto SMTP personalizado
+
+### Opción 3: Propiedades del Sistema (-D)
+
+Si prefieres usar propiedades del sistema en lugar de variables de entorno:
+
+#### Gmail:
 ```powershell
 mvn exec:java -Demail.provider=gmail -Demail.username=tu-email@gmail.com -Demail.password=tu-app-password
 ```
 
 **Nota:** Gmail requiere App Password (genera en: https://myaccount.google.com/apppasswords)
 
-### Opción 3: Outlook/Hotmail (No requiere App Password)
-
+#### Outlook/Hotmail:
 ```powershell
 mvn exec:java -Demail.provider=outlook -Demail.username=tu-email@outlook.com -Demail.password=tu-password
 ```
 
-### Opción 4: Yahoo
-
+#### Yahoo:
 ```powershell
 mvn exec:java -Demail.provider=yahoo -Demail.username=tu-email@yahoo.com -Demail.password=tu-password
 ```
 
-### Opción 5: Proveedor personalizado
-
+#### Proveedor personalizado:
 ```powershell
 mvn exec:java -Demail.username=tu-email@dominio.com -Demail.password=tu-password -Dsmtp.host=smtp.tu-proveedor.com -Dsmtp.port=587
 ```
 
-**Recomendación:** Si no tienes acceso a App Passwords, usa **Outlook** o el **modo archivo** para desarrollo/testing.
+### Prioridad de Configuración
+
+El sistema lee las configuraciones en este orden (la primera encontrada se usa):
+1. **Variables de entorno** (más alta prioridad)
+2. **Propiedades del sistema** (`-D`)
+3. **Modo archivo** (si no hay configuración)
+
+**Recomendación:** Usa **variables de entorno** para desarrollo y producción. Si no tienes acceso a App Passwords, usa **Outlook** o el **modo archivo** para desarrollo/testing.
 
 ## Functionalities
 - **Menú interactivo en consola** con opciones:
