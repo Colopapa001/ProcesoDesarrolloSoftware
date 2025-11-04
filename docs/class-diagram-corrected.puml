@@ -4,13 +4,13 @@ title TP - Sistema de Gestión de Partidos Deportivos (MVC + Patrones)
 package "MVC" {
   class UserController
   class MatchController
-  class ConsoleView
+  class InteractiveMenu
   
   UserController --> UserRepository : usa
   MatchController --> MatchService : usa
-  ConsoleView --> UserController
-  ConsoleView --> MatchController
-  ConsoleView ..|> NotificationObserver : implementa
+  InteractiveMenu --> UserController
+  InteractiveMenu --> MatchController
+  InteractiveMenu --> SessionService
 }
 
 package "Model" {
@@ -57,16 +57,28 @@ package "Catálogos (desde JSON)" {
     + defaultChannels(): List<NotificationChannel>
   }
   
-  class SportType { + name: String }
-  class SkillLevel { + name: String, + rank: int }
-  class NotificationChannel { + name: String }
-  class MatchEvent { + name: String }
+  class SportType {
+    + name: String
+  }
+  
+  class SkillLevel {
+    + name: String
+    + rank: int
+  }
+  
+  class NotificationChannel {
+    + name: String
+  }
+  
+  class MatchEvent {
+    + name: String
+  }
+  
+  ReferenceData --> SportType : proporciona
+  ReferenceData --> SkillLevel : proporciona
+  ReferenceData --> NotificationChannel : proporciona
+  ReferenceData --> MatchEvent : proporciona
 }
-
-ReferenceData --> SportType : proporciona
-ReferenceData --> SkillLevel : proporciona
-ReferenceData --> NotificationChannel : proporciona
-ReferenceData --> MatchEvent : proporciona
 
 package "State (Estados de Partido)" {
   interface MatchState {
@@ -139,6 +151,7 @@ package "Observer + Factory + Facade (Notificaciones)" {
   NotificationFacade --> Notifier : usa
   Notifier <|.. EmailNotifier
   Notifier <|.. PushNotifier
+  EmailNotifier --> EmailService : usa
   
   note right of NotificationFacade
     Facade simplifica la notificación
@@ -179,7 +192,7 @@ package "Service" {
     - userRepository: UserRepository
     - matchingService: MatchingService
     - notificationFacade: NotificationFacade
-    + createMatch(...): Match
+    + createMatch(sport: SportType, requiredPlayers: int, duration: int, location: String, start: LocalDateTime): Match
     + joinMatch(matchId: String, username: String)
     + suggestPlayers(matchId: String): List<User>
     + confirm(matchId: String)
@@ -188,16 +201,36 @@ package "Service" {
     + cancel(matchId: String)
   }
   
+  class SessionService {
+    - userRepository: UserRepository
+    - currentUser: User
+    + login(username: String, password: String): boolean
+    + logout(): void
+    + getCurrentUser(): User
+    + isLoggedIn(): boolean
+  }
+  
+  class EmailService {
+    - smtpHost: String
+    - smtpPort: int
+    - username: String
+    - password: String
+    + sendEmail(to: String, subject: String, body: String): boolean
+    + isConfigured(): boolean
+  }
+  
   MatchService --> MatchRepository
   MatchService --> UserRepository
   MatchService --> MatchingService
   MatchService --> NotificationFacade
+  SessionService --> UserRepository
+  EmailNotifier --> EmailService : usa
 }
 
 ' Integraciones clave
 MatchController --> MatchService
 UserController --> UserRepository
-ConsoleView --> NotificationObserver : implementa
+InteractiveMenu --> SessionService
 Match --> NotificationObserver : notifica eventos
 
 note right of Match

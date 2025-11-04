@@ -1,0 +1,216 @@
+classDiagram
+%% TP - Sistema de Gestión de Partidos Deportivos (MVC + Patrones)
+
+%% ================= MVC =================
+class UserController {
+  + registerUser(username: String, email: String, password: String, favoriteSport: SportType, skillLevel: SkillLevel): User
+}
+class MatchController {
+  + create(sport: SportType, requiredPlayers: int, duration: int, location: String, start: LocalDateTime): Match
+  + search(sport: SportType): Collection~Match~
+  + join(matchId: String, username: String)
+  + confirm(matchId: String)
+  + startIfTime(matchId: String)
+  + finish(matchId: String)
+  + cancel(matchId: String)
+  + suggestions(matchId: String): List~User~
+}
+class InteractiveMenu {
+  + run(): void
+  - register(): void
+  - login(): void
+  - createMatch(): void
+  - searchMatches(): void
+  - joinMatch(): void
+}
+
+UserController --> UserRepository : usa
+MatchController --> MatchService : usa
+InteractiveMenu --> UserController
+InteractiveMenu --> MatchController
+InteractiveMenu --> SessionService
+
+%% ================= Model =================
+class User {
+  - String id
+  - String username
+  - String email
+  - String passwordHash
+  - SportType favoriteSport
+  - SkillLevel skillLevel
+}
+
+class Match {
+  - String id
+  - SportType sportType
+  - int requiredPlayers
+  - int durationMinutes
+  - String location
+  - LocalDateTime startDateTime
+  - List~User~ players
+  - List~NotificationObserver~ observers
+  - MatchState state
+  + join(User)
+  + confirm()
+  + start()
+  + finish()
+  + cancel()
+  + addObserver(NotificationObserver)
+  + notifyObservers(MatchEvent)
+}
+
+User --> SportType : referencia
+User --> SkillLevel : referencia
+Match --> SportType : referencia
+Match "many" o-- "many" User : jugadores
+
+%% ============ Catálogos (desde JSON) ============
+class ReferenceData {
+  + sport(name: String): SportType
+  + skill(name: String): SkillLevel
+  + channel(name: String): NotificationChannel
+  + event(name: String): MatchEvent
+  + defaultChannels(): List~NotificationChannel~
+}
+
+class SportType {
+  + String name
+}
+
+class SkillLevel {
+  + String name
+  + int rank
+}
+
+class NotificationChannel {
+  + String name
+}
+
+class MatchEvent {
+  + String name
+}
+
+ReferenceData --> SportType : proporciona
+ReferenceData --> SkillLevel : proporciona
+ReferenceData --> NotificationChannel : proporciona
+ReferenceData --> MatchEvent : proporciona
+
+%% ============ State (Estados de Partido) ============
+class MatchState {
+  <<interface>>
+  + name(): String
+  + onPlayerJoined(Match)
+  + confirm(Match)
+  + start(Match)
+  + finish(Match)
+  + cancel(Match)
+}
+class NeedPlayersState
+class AssembledState
+class ConfirmedState
+class InProgressState
+class FinishedState
+class CanceledState
+
+Match --> MatchState : tiene estado
+MatchState <|.. NeedPlayersState
+MatchState <|.. AssembledState
+MatchState <|.. ConfirmedState
+MatchState <|.. InProgressState
+MatchState <|.. FinishedState
+MatchState <|.. CanceledState
+
+%% ============ Strategy (Emparejamiento) ============
+class PlayerMatchingStrategy {
+  <<interface>>
+  + suggestPlayers(match: Match, candidates: Collection~User~): List~User~
+}
+class BySkillLevelStrategy {
+  + suggestPlayers(match: Match, candidates: Collection~User~): List~User~
+}
+class MatchingService {
+  - PlayerMatchingStrategy strategy
+  + setStrategy(PlayerMatchingStrategy)
+  + suggestPlayers(Match, Collection~User~): List~User~
+}
+
+PlayerMatchingStrategy <|.. BySkillLevelStrategy
+MatchingService --> PlayerMatchingStrategy : usa
+
+%% ============ Observer + Factory + Facade (Notificaciones) ============
+class NotificationObserver {
+  <<interface>>
+  + onMatchEvent(Match, MatchEvent)
+}
+Match --> NotificationObserver : notifica
+
+class Notifier {
+  <<interface>>
+  + notify(User, Match, MatchEvent)
+}
+class NotificationFactory {
+  + create(NotificationChannel): Notifier
+}
+class NotificationFacade {
+  - NotificationFactory factory
+  + notifyAllChannels(User, Match, MatchEvent)
+}
+
+NotificationFactory --> Notifier : crea
+NotificationFacade --> NotificationFactory : usa
+
+%% ============ Repository ============
+class UserRepository {
+  <<interface>>
+  + save(User): User
+  + findById(id: String): Optional~User~
+  + findByUsername(username: String): Optional~User~
+  + findAll(): Collection~User~
+}
+class MatchRepository {
+  <<interface>>
+  + save(Match): Match
+  + findById(id: String): Optional~Match~
+  + findAll(): Collection~Match~
+  + findBySport(SportType): Collection~Match~
+}
+
+%% ============ Service ============
+class MatchService {
+  - MatchRepository matchRepository
+  - UserRepository userRepository
+  - MatchingService matchingService
+  - NotificationFacade notificationFacade
+  + createMatch(sport: SportType, requiredPlayers: int, duration: int, location: String, start: LocalDateTime): Match
+  + joinMatch(matchId: String, username: String)
+  + suggestPlayers(matchId: String): List~User~
+  + confirm(matchId: String)
+  + startIfTime(matchId: String)
+  + finish(matchId: String)
+  + cancel(matchId: String)
+}
+
+class SessionService {
+  - UserRepository userRepository
+  - User currentUser
+  + login(username: String, password: String): boolean
+  + logout(): void
+  + getCurrentUser(): User
+  + isLoggedIn(): boolean
+}
+
+class EmailService {
+  - String smtpHost
+  - int smtpPort
+  - String username
+  - String password
+  + sendEmail(to: String, subject: String, body: String): boolean
+  + isConfigured(): boolean
+}
+
+MatchService --> MatchRepository
+MatchService --> UserRepository
+MatchService --> MatchingService
+MatchService --> NotificationFacade
+SessionService --> UserRepository
+EmailNotifier --> EmailService : usa

@@ -7,12 +7,16 @@ C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sports
 C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\strategy\BySkillLevelStrategy.java
 C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\model\state\states\ConfirmedState.java
 C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\notification\NotificationObserver.java
+C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\service\SessionService.java
 C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\view\ConsoleView.java
 C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\notification\PushNotifier.java
 C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\controller\UserController.java
+C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\view\ConsoleNotificationObserver.java
+C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\view\InteractiveMenu.java
 C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\service\MatchService.java
 C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\model\state\states\FinishedState.java
 C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\notification\EmailNotifier.java
+C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\service\EmailService.java
 C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\repository\InMemoryUserRepository.java
 C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\repository\UserRepository.java
 C:\Users\RH852XY\IdeaProjects\ProcesoDesarrolloSoftware\src\main\java\com\sportsmatching\model\User.java

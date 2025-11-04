@@ -2,20 +2,17 @@ package com.sportsmatching;
 
 import com.sportsmatching.controller.MatchController;
 import com.sportsmatching.controller.UserController;
-import com.sportsmatching.data.ReferenceData;
-import com.sportsmatching.model.SkillLevel;
-import com.sportsmatching.model.SportType;
 import com.sportsmatching.repository.InMemoryMatchRepository;
 import com.sportsmatching.repository.InMemoryUserRepository;
 import com.sportsmatching.service.MatchService;
 import com.sportsmatching.service.MatchingService;
+import com.sportsmatching.service.SessionService;
 import com.sportsmatching.strategy.BySkillLevelStrategy;
-import com.sportsmatching.view.ConsoleView;
+import com.sportsmatching.view.InteractiveMenu;
 
 public class Main {
     public static void main(String[] args) {
-        // Initialize reference data from JSON
-        ReferenceData ref = ReferenceData.get();
+        System.out.println("Inicializando sistema...");
 
         InMemoryUserRepository userRepository = new InMemoryUserRepository();
         InMemoryMatchRepository matchRepository = new InMemoryMatchRepository();
@@ -25,19 +22,29 @@ public class Main {
 
         UserController userController = new UserController(userRepository);
         MatchController matchController = new MatchController(matchService);
-        ConsoleView view = new ConsoleView(userController, matchController);
+        SessionService sessionService = new SessionService(userRepository);
 
-        // Seed a few users using reference data
-        SportType football = ref.sport("FOOTBALL");
-        SkillLevel inter = ref.skill("INTERMEDIATE");
-        SkillLevel adv = ref.skill("ADVANCED");
-        SkillLevel beg = ref.skill("BEGINNER");
+        InteractiveMenu menu = new InteractiveMenu(userController, matchController, sessionService);
+        
+        // Mostrar configuración de email
+        String emailUser = System.getProperty("email.username");
+        String emailProvider = System.getProperty("email.provider", "gmail");
+        
+        if (emailUser == null || emailUser.isEmpty()) {
+            System.out.println("\n⚠ ATENCIÓN: Email no configurado.");
+            System.out.println("Los emails se guardarán en archivos en la carpeta 'emails/'");
+            System.out.println("\nPara enviar emails reales, configura:");
+            System.out.println("  -Demail.provider=gmail -Demail.username=tu-email@gmail.com -Demail.password=tu-password");
+            System.out.println("  -Demail.provider=outlook -Demail.username=tu-email@outlook.com -Demail.password=tu-password");
+            System.out.println("  -Demail.provider=yahoo -Demail.username=tu-email@yahoo.com -Demail.password=tu-password");
+            System.out.println("\nNota: Para Gmail necesitas App Password. Para otros proveedores usa tu contraseña normal.\n");
+        } else {
+            System.out.println("✓ Email configurado. Proveedor: " + emailProvider);
+            System.out.println("  Usuario: " + emailUser);
+            System.out.println("  Los emails se enviarán por SMTP\n");
+        }
 
-        userController.registerUser("ana", "ana@example.com", "secret", football, inter);
-        userController.registerUser("beto", "beto@example.com", "secret", football, adv);
-        userController.registerUser("cami", "cami@example.com", "secret", football, beg);
-
-        view.runDemo();
+        menu.run();
     }
 }
 

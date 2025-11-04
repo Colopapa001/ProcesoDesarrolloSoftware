@@ -23,15 +23,60 @@ mvn clean compile exec:java
 3. Clic derecho en `Main.java` → **Run 'Main.main()'**
    - O usa el menú: **Run > Run 'Main'**
 
-Logs show notifications and state transitions.
+## Configuración de Email
+
+El sistema soporta múltiples proveedores de email o puede guardar emails en archivos.
+
+### Opción 1: Sin configuración (Modo Archivo - Recomendado para desarrollo)
+
+Si no configuras credenciales, los emails se guardarán automáticamente en archivos en la carpeta `emails/`:
+
+```powershell
+mvn exec:java
+```
+
+Los archivos se guardan como: `emails/email_usuario_at_dominio_com_20241103_143022.txt`
+
+### Opción 2: Gmail
+
+```powershell
+mvn exec:java -Demail.provider=gmail -Demail.username=tu-email@gmail.com -Demail.password=tu-app-password
+```
+
+**Nota:** Gmail requiere App Password (genera en: https://myaccount.google.com/apppasswords)
+
+### Opción 3: Outlook/Hotmail (No requiere App Password)
+
+```powershell
+mvn exec:java -Demail.provider=outlook -Demail.username=tu-email@outlook.com -Demail.password=tu-password
+```
+
+### Opción 4: Yahoo
+
+```powershell
+mvn exec:java -Demail.provider=yahoo -Demail.username=tu-email@yahoo.com -Demail.password=tu-password
+```
+
+### Opción 5: Proveedor personalizado
+
+```powershell
+mvn exec:java -Demail.username=tu-email@dominio.com -Demail.password=tu-password -Dsmtp.host=smtp.tu-proveedor.com -Dsmtp.port=587
+```
+
+**Recomendación:** Si no tienes acceso a App Passwords, usa **Outlook** o el **modo archivo** para desarrollo/testing.
 
 ## Functionalities
+- **Menú interactivo en consola** con opciones:
+  - Registrarse e iniciar sesión
+  - Crear partidos
+  - Buscar partidos por deporte
+  - Unirse a partidos
 - Registro de usuarios (en memoria)
 - Búsqueda/creación de partidos por deporte
 - Estados del partido: "Necesitamos jugadores" → "Partido armado" → "Confirmado" → "En juego" → "Finalizado" (y "Cancelado")
 - Emparejamiento por estrategia (por nivel)
-- Notificaciones simuladas (Email/Push) con fachada y fábrica
- - Datos de referencia desde JSON: `src/main/resources/data/mockdata.json` (deportes, niveles, canales, eventos). Nuevos items pueden agregarse en memoria y opcionalmente persistirse.
+- **Notificaciones por email reales** (configurables via SMTP)
+- Datos de referencia desde JSON: `src/main/resources/data/mockdata.json` (deportes, niveles, canales, eventos)
 
 ## Patrones aplicados
 - State: `MatchState` y estados concretos en `model.state.states.*` controlan el ciclo de vida.
@@ -61,7 +106,22 @@ Generar imagen (ejemplo):
 plantuml docs/class-diagram.puml
 ```
 
+## Uso del Sistema
+
+1. **Ejecutar el programa**: `mvn exec:java` o `.\run.ps1`
+2. **Registrarse**: Crear una nueva cuenta con username, email, deporte favorito y nivel
+3. **Iniciar sesión**: Autenticarse con username y password
+4. **Crear partido**: Definir deporte, jugadores requeridos, ubicación y fecha
+5. **Buscar partidos**: Ver partidos disponibles por deporte
+6. **Unirse a partido**: Usar el ID del partido para unirse
+7. **Recibir emails**: Cuando se crea un partido de tu deporte favorito, recibirás un email automáticamente
+
 ## Notas
 - Repositorios en memoria para simplificar.
-- Se simulan notificaciones (logs). Integraciones reales encajarían vía Adapter dentro de `Notifier`s.
+- Email real implementado con JavaMail. Si no se configura, se guarda en archivos en `emails/`.
+- El sistema envía emails automáticamente cuando:
+  - Se crea un partido de tu deporte favorito
+  - Un partido alcanza el número de jugadores requerido
+  - Un partido es confirmado
+  - Un partido cambia de estado (en juego, finalizado, cancelado)
 
