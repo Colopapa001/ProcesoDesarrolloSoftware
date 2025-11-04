@@ -16,13 +16,13 @@ public class Main {
 
         // Configurar valores por defecto para email si no están establecidos
         if (System.getProperty("email.provider") == null) {
-            System.setProperty("email.provider", "outlook");
+            System.setProperty("email.provider", "gmail");
         }
         if (System.getProperty("email.username") == null) {
-            System.setProperty("email.username", "pdstpo@outlook.com");
+            System.setProperty("email.username", "ji.papa.colo@gmail.com");
         }
         if (System.getProperty("email.password") == null) {
-            System.setProperty("email.password", "Contra123");
+            System.setProperty("email.password", "nhvq vqtj okqa twmy");
         }
 
         InMemoryUserRepository userRepository = new InMemoryUserRepository();
