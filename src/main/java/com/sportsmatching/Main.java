@@ -1,44 +1,44 @@
 package com.sportsmatching;
 
-import com.sportsmatching.adapter.FirebasePushAdapter;
-import com.sportsmatching.adapter.JavaMailAdapter;
+import com.sportsmatching.infraestructura.notification.FirebasePushAdapter;
+import com.sportsmatching.infraestructura.notification.JavaMailAdapter;
 import com.sportsmatching.dominio.PartidoValidacion;
-import com.sportsmatching.mvc.autenticacion.AuthController;
-import com.sportsmatching.mvc.autenticacion.modelos.AuthModel;
-import com.sportsmatching.mvc.autenticacion.AuthView;
-import com.sportsmatching.mvc.autenticacion.servicios.AutenticacionService;
-import com.sportsmatching.mvc.busqueda.BusquedaController;
-import com.sportsmatching.mvc.busqueda.servicios.BusquedaFiltroService;
-import com.sportsmatching.mvc.busqueda.BusquedaView;
-import com.sportsmatching.mvc.busqueda.modelos.BusquedaModel;
-import com.sportsmatching.mvc.catalogos.CatalogoController;
-import com.sportsmatching.mvc.catalogos.CatalogoView;
-import com.sportsmatching.mvc.catalogos.modelos.CatalogoModel;
-import com.sportsmatching.mvc.partido.controladores.PartidoCreacionController;
-import com.sportsmatching.mvc.partido.controladores.PartidoEstadisticasController;
-import com.sportsmatching.mvc.partido.controladores.PartidoGestionController;
-import com.sportsmatching.mvc.partido.modelos.PartidoModel;
-import com.sportsmatching.mvc.partido.modelos.PartidoNotificacionService;
-import com.sportsmatching.mvc.partido.modelos.PartidoRepository;
-import com.sportsmatching.mvc.partido.modelos.PartidoService;
-import com.sportsmatching.mvc.partido.vistas.PartidoDetailView;
-import com.sportsmatching.mvc.partido.vistas.PartidoFormView;
-import com.sportsmatching.mvc.partido.vistas.PartidoListView;
-import com.sportsmatching.mvc.registro.RegistroController;
-import com.sportsmatching.mvc.registro.modelos.RegistroModel;
-import com.sportsmatching.mvc.registro.RegistroView;
-import com.sportsmatching.mvc.registro.servicios.UsuarioValidacionService;
-import com.sportsmatching.observer.EmailObserver;
-import com.sportsmatching.observer.NotificacionSubject;
-import com.sportsmatching.observer.PushObserver;
-import com.sportsmatching.repository.CatalogoRepository;
-import com.sportsmatching.repository.InMemoryCatalogoRepository;
-import com.sportsmatching.repository.InMemoryPartidoRepository;
-import com.sportsmatching.repository.InMemoryUsuarioRepository;
-import com.sportsmatching.repository.UsuarioRepository;
-import com.sportsmatching.strategy.EmparejamientoPorNivel;
-import com.sportsmatching.strategy.MatchmakingService;
-import com.sportsmatching.view.InteractiveMenu;
+import com.sportsmatching.presentacion.mvc.autenticacion.AuthController;
+import com.sportsmatching.presentacion.mvc.autenticacion.modelos.AuthModel;
+import com.sportsmatching.presentacion.mvc.autenticacion.AuthView;
+import com.sportsmatching.presentacion.mvc.autenticacion.servicios.AutenticacionService;
+import com.sportsmatching.presentacion.mvc.busqueda.BusquedaController;
+import com.sportsmatching.presentacion.mvc.busqueda.servicios.BusquedaFiltroService;
+import com.sportsmatching.presentacion.mvc.busqueda.BusquedaView;
+import com.sportsmatching.presentacion.mvc.busqueda.modelos.BusquedaModel;
+import com.sportsmatching.presentacion.mvc.catalogos.CatalogoController;
+import com.sportsmatching.presentacion.mvc.catalogos.CatalogoView;
+import com.sportsmatching.presentacion.mvc.catalogos.modelos.CatalogoModel;
+import com.sportsmatching.presentacion.mvc.partido.controladores.PartidoCreacionController;
+import com.sportsmatching.presentacion.mvc.partido.controladores.PartidoEstadisticasController;
+import com.sportsmatching.presentacion.mvc.partido.controladores.PartidoGestionController;
+import com.sportsmatching.presentacion.mvc.partido.modelos.PartidoModel;
+import com.sportsmatching.presentacion.mvc.partido.modelos.PartidoNotificacionService;
+import com.sportsmatching.presentacion.mvc.partido.modelos.PartidoRepository;
+import com.sportsmatching.presentacion.mvc.partido.modelos.PartidoService;
+import com.sportsmatching.presentacion.mvc.partido.vistas.PartidoDetailView;
+import com.sportsmatching.presentacion.mvc.partido.vistas.PartidoFormView;
+import com.sportsmatching.presentacion.mvc.partido.vistas.PartidoListView;
+import com.sportsmatching.presentacion.mvc.registro.RegistroController;
+import com.sportsmatching.presentacion.mvc.registro.modelos.RegistroModel;
+import com.sportsmatching.presentacion.mvc.registro.RegistroView;
+import com.sportsmatching.presentacion.mvc.registro.servicios.UsuarioValidacionService;
+import com.sportsmatching.aplicacion.observer.EmailObserver;
+import com.sportsmatching.aplicacion.observer.NotificacionSubject;
+import com.sportsmatching.aplicacion.observer.PushObserver;
+import com.sportsmatching.infraestructura.persistence.CatalogoRepository;
+import com.sportsmatching.infraestructura.persistence.InMemoryCatalogoRepository;
+import com.sportsmatching.infraestructura.persistence.InMemoryPartidoRepository;
+import com.sportsmatching.infraestructura.persistence.InMemoryUsuarioRepository;
+import com.sportsmatching.infraestructura.persistence.UsuarioRepository;
+import com.sportsmatching.aplicacion.strategy.EmparejamientoPorNivel;
+import com.sportsmatching.aplicacion.strategy.MatchmakingService;
+import com.sportsmatching.presentacion.view.InteractiveMenu;
 
 public class Main {
     public static void main(String[] args) {
@@ -57,9 +57,9 @@ public class Main {
 
         // Repositorios
         UsuarioRepository usuarioRepository = new InMemoryUsuarioRepository();
-        com.sportsmatching.repository.PartidoRepository partidoRepository = new InMemoryPartidoRepository();
+        com.sportsmatching.infraestructura.persistence.PartidoRepository partidoRepository = new InMemoryPartidoRepository();
         CatalogoRepository catalogoRepository = new InMemoryCatalogoRepository();
-        com.sportsmatching.mvc.partido.modelos.PartidoRepository partidoRepositoryMVC = new com.sportsmatching.mvc.partido.modelos.InMemoryPartidoRepository();
+        com.sportsmatching.presentacion.mvc.partido.modelos.PartidoRepository partidoRepositoryMVC = new com.sportsmatching.presentacion.mvc.partido.modelos.InMemoryPartidoRepository();
 
         // Strategy
         MatchmakingService matchmakingService = new MatchmakingService(new EmparejamientoPorNivel());
