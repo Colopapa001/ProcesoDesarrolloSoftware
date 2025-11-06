@@ -1,7 +1,6 @@
 package com.sportsmatching.aplicacion.state;
 
 import com.sportsmatching.dominio.Partido;
-import com.sportsmatching.aplicacion.state.PartidoArmado;
 
 public class NecesitamosJugadores implements PartidoState {
     @Override
