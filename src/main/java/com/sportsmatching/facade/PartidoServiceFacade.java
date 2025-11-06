@@ -5,6 +5,7 @@ import com.sportsmatching.dominio.Partido;
 import com.sportsmatching.dominio.Usuario;
 import com.sportsmatching.dominio.catalogos.Deporte;
 import com.sportsmatching.dominio.catalogos.Nivel;
+import com.sportsmatching.mvc.partido.modelos.PartidoModel;
 import com.sportsmatching.mvc.partido.modelos.PartidoNotificacionService;
 import com.sportsmatching.mvc.partido.modelos.PartidoRepository;
 import com.sportsmatching.mvc.partido.modelos.PartidoService;
@@ -16,17 +17,20 @@ import java.util.List;
 
 public class PartidoServiceFacade {
     private final PartidoRepository partidoRepository;
+    private final PartidoModel partidoModel;
     private final PartidoService partidoService;
     private final MatchmakingService matchmakingService;
     private final PartidoNotificacionService notificacionService;
     private final BusquedaModel busquedaModel;
 
-    public PartidoServiceFacade(PartidoRepository partidoRepository, 
+    public PartidoServiceFacade(PartidoRepository partidoRepository,
+                               PartidoModel partidoModel,
                                PartidoService partidoService,
                                MatchmakingService matchmakingService,
                                PartidoNotificacionService notificacionService,
                                BusquedaModel busquedaModel) {
         this.partidoRepository = partidoRepository;
+        this.partidoModel = partidoModel;
         this.partidoService = partidoService;
         this.matchmakingService = matchmakingService;
         this.notificacionService = notificacionService;
@@ -36,11 +40,9 @@ public class PartidoServiceFacade {
     public Partido crearPartidoCompleto(Deporte deporte, Usuario organizador, int jugadoresRequeridos,
                                        Location ubicacion, LocalDateTime fechaHora, int duracion,
                                        Nivel nivelMin, Nivel nivelMax) {
-        Partido partido = partidoRepository.guardar(
-            new Partido(deporte, organizador, jugadoresRequeridos, ubicacion, fechaHora, duracion, nivelMin, nivelMax)
-        );
-        notificacionService.notificarCreacion(partido);
-        return partido;
+        // Usar PartidoModel para mantener consistencia con el patrón MVC
+        return partidoModel.crearPartido(deporte, organizador, jugadoresRequeridos, 
+                                       ubicacion, fechaHora, duracion, nivelMin, nivelMax);
     }
 
     public boolean inscribirJugadorYNotificar(Partido partido, Usuario usuario) {
