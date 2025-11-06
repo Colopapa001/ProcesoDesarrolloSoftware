@@ -9,7 +9,7 @@ if (-not (Test-Path $javaExe)) {
 
 Write-Host "Java encontrado: $javaExe" -ForegroundColor Green
 
-$pumlFile = "docs\diagrama 2.puml"
+$pumlFile = "docs\diagrama.puml"
 $jarFile = "plantuml-1.2025.10.jar"
 
 if (-not (Test-Path $pumlFile)) {
