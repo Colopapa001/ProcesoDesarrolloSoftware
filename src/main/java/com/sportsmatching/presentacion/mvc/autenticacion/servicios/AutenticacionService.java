@@ -17,6 +17,10 @@ public class AutenticacionService {
             .map(u -> u.validarPassword(password))
             .orElse(false);
     }
+    
+    public boolean existeUsuario(String username) {
+        return usuarioRepository.findByUsername(username).isPresent();
+    }
 
     public String generarToken(Usuario usuario) {
         return UUID.randomUUID().toString();

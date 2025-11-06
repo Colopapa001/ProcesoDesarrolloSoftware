@@ -12,11 +12,16 @@ public class AuthModel {
     }
 
     public Usuario autenticar(String username, String password) {
+        if (!autenticacionService.existeUsuario(username)) {
+            throw new IllegalArgumentException("El usuario no existe. Por favor, regístrese primero.");
+        }
+        
         if (autenticacionService.verificarCredenciales(username, password)) {
             usuarioActual = autenticacionService.obtenerUsuario(username);
             return usuarioActual;
         }
-        return null;
+        
+        throw new IllegalArgumentException("Contraseña incorrecta");
     }
 
     public Usuario getUsuarioActual() {

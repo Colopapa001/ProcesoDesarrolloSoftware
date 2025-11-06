@@ -17,13 +17,16 @@ public class RegistroModel {
                                com.sportsmatching.dominio.catalogos.Nivel nivel,
                                com.sportsmatching.dominio.catalogos.Deporte deporteFavorito,
                                com.sportsmatching.dominio.Location ubicacion) {
-        if (!validacionService.validarDatos(username, email, password)) {
-            throw new IllegalArgumentException("Datos inválidos");
-        }
+        // Validar datos básicos (lanzará excepción con mensaje específico si falla)
+        validacionService.validarDatos(username, email, password);
         
+        // Validar unicidad
         if (!validacionService.validarUnicidad(email, username)) {
             throw new IllegalArgumentException("Email o username ya existe");
         }
+        
+        // Validar ubicación (la validación de coordenadas se hace en el constructor de Location)
+        validacionService.validarUbicacion(ubicacion);
 
         Usuario usuario = new Usuario(username, email, password, nivel, deporteFavorito, ubicacion);
         return usuarioRepository.save(usuario);

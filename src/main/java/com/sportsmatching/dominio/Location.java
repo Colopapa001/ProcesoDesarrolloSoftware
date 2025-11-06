@@ -6,14 +6,25 @@ public class Location {
     private String descripcion; // Opcional: descripción de la ubicación
 
     public Location(double latitud, double longitud) {
+        validarCoordenadas(latitud, longitud);
         this.latitud = latitud;
         this.longitud = longitud;
     }
 
     public Location(double latitud, double longitud, String descripcion) {
+        validarCoordenadas(latitud, longitud);
         this.latitud = latitud;
         this.longitud = longitud;
         this.descripcion = descripcion;
+    }
+    
+    private void validarCoordenadas(double latitud, double longitud) {
+        if (latitud < -90 || latitud > 90) {
+            throw new IllegalArgumentException("La latitud debe estar entre -90 y 90 grados. Valor ingresado: " + latitud);
+        }
+        if (longitud < -180 || longitud > 180) {
+            throw new IllegalArgumentException("La longitud debe estar entre -180 y 180 grados. Valor ingresado: " + longitud);
+        }
     }
 
     public double getLatitud() { return latitud; }

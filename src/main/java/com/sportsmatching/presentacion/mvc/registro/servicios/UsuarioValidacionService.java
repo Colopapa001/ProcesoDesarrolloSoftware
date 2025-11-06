@@ -15,9 +15,24 @@ public class UsuarioValidacionService {
     }
 
     public boolean validarDatos(String username, String email, String password) {
-        return username != null && !username.trim().isEmpty() &&
-               email != null && email.contains("@") &&
-               password != null && password.length() >= 6;
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("El username no puede estar vacío");
+        }
+        if (email == null || !email.contains("@")) {
+            throw new IllegalArgumentException("El email debe ser válido (debe contener @)");
+        }
+        if (password == null || password.isEmpty()) {
+            throw new IllegalArgumentException("La contraseña no puede estar vacía");
+        }
+        return true;
+    }
+    
+    public boolean validarUbicacion(com.sportsmatching.dominio.Location ubicacion) {
+        if (ubicacion == null) {
+            throw new IllegalArgumentException("La ubicación no puede ser nula");
+        }
+        // La validación de coordenadas se hace en el constructor de Location
+        return true;
     }
 }
 

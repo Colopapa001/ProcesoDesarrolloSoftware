@@ -25,8 +25,12 @@ public class RegistroController {
                 view.mostrarError("Error al crear el usuario");
                 return false;
             }
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
+            // Mostrar mensaje de error específico
             view.mostrarError(e.getMessage());
+            return false;
+        } catch (Exception e) {
+            view.mostrarError("Error inesperado: " + e.getMessage());
             return false;
         }
     }

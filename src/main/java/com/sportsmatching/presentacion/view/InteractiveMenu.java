@@ -151,60 +151,79 @@ public class InteractiveMenu {
     private void registrarUsuario() {
         registroView.mostrarFormulario();
         
-        System.out.print("Username: ");
-        String username = scanner.nextLine();
-        
-        System.out.print("Email: ");
-        String email = scanner.nextLine();
-        
-        System.out.print("Password: ");
-        String password = scanner.nextLine();
-        
-        List<Nivel> niveles = catalogoController.obtenerNiveles();
-        System.out.println("Niveles disponibles:");
-        for (int i = 0; i < niveles.size(); i++) {
-            System.out.println((i + 1) + ". " + niveles.get(i).getNombre());
+        try {
+            System.out.print("Username [default: emma]: ");
+            String username = scanner.nextLine().trim();
+            if (username.isEmpty()) username = "emma";
+            
+            System.out.print("Email [default: emma.maidana@gmail.com]: ");
+            String email = scanner.nextLine().trim();
+            if (email.isEmpty()) email = "emma.maidana@gmail.com";
+            
+            System.out.print("Password [default: emma]: ");
+            String password = scanner.nextLine().trim();
+            if (password.isEmpty()) password = "emma";
+            
+            List<Nivel> niveles = catalogoController.obtenerNiveles();
+            System.out.println("Niveles disponibles:");
+            for (int i = 0; i < niveles.size(); i++) {
+                System.out.println((i + 1) + ". " + niveles.get(i).getNombre());
+            }
+            System.out.print("Seleccione nivel [default: 1]: ");
+            String nivelInput = scanner.nextLine().trim();
+            int nivelIdx = nivelInput.isEmpty() ? 0 : Integer.parseInt(nivelInput) - 1;
+            Nivel nivel = niveles.get(nivelIdx);
+            
+            List<Deporte> deportes = catalogoController.obtenerDeportes();
+            System.out.println("Deportes disponibles:");
+            for (int i = 0; i < deportes.size(); i++) {
+                System.out.println((i + 1) + ". " + deportes.get(i).getNombre());
+            }
+            System.out.print("Seleccione deporte favorito [default: 1]: ");
+            String deporteInput = scanner.nextLine().trim();
+            int deporteIdx = deporteInput.isEmpty() ? 0 : Integer.parseInt(deporteInput) - 1;
+            Deporte deporteFavorito = deportes.get(deporteIdx);
+            
+            // Pedir descripción de ubicación y usar coordenadas por defecto de Buenos Aires
+            System.out.print("Ubicación - Descripción [default: Buenos Aires]: ");
+            String descripcionUbicacion = scanner.nextLine().trim();
+            if (descripcionUbicacion.isEmpty()) descripcionUbicacion = "Buenos Aires";
+            
+            // Coordenadas por defecto de Buenos Aires
+            double latitud = -34.6037;
+            double longitud = -58.3816;
+            
+            Location ubicacion = new Location(latitud, longitud, descripcionUbicacion);
+            
+            boolean exito = registroController.registrarUsuario(username, email, password, nivel, deporteFavorito, ubicacion);
+            if (exito) {
+                System.out.println("✓ Usuario registrado exitosamente");
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Error al registrar usuario: " + e.getMessage());
         }
-        System.out.print("Seleccione nivel: ");
-        int nivelIdx = scanner.nextInt() - 1;
-        scanner.nextLine();
-        Nivel nivel = niveles.get(nivelIdx);
-        
-        List<Deporte> deportes = catalogoController.obtenerDeportes();
-        System.out.println("Deportes disponibles:");
-        for (int i = 0; i < deportes.size(); i++) {
-            System.out.println((i + 1) + ". " + deportes.get(i).getNombre());
-        }
-        System.out.print("Seleccione deporte favorito: ");
-        int deporteIdx = scanner.nextInt() - 1;
-        scanner.nextLine();
-        Deporte deporteFavorito = deportes.get(deporteIdx);
-        
-        System.out.print("Ubicación - Latitud: ");
-        double latitud = scanner.nextDouble();
-        scanner.nextLine();
-        
-        System.out.print("Ubicación - Longitud: ");
-        double longitud = scanner.nextDouble();
-        scanner.nextLine();
-        
-        Location ubicacion = new Location(latitud, longitud);
-        
-        registroController.registrarUsuario(username, email, password, nivel, deporteFavorito, ubicacion);
     }
 
     private void iniciarSesion() {
         authView.mostrarLogin();
         
-        System.out.print("Username: ");
-        String username = scanner.nextLine();
+        System.out.print("Username [default: emma]: ");
+        String username = scanner.nextLine().trim();
+        if (username.isEmpty()) username = "emma";
         
-        System.out.print("Password: ");
-        String password = scanner.nextLine();
+        System.out.print("Password [default: emma]: ");
+        String password = scanner.nextLine().trim();
+        if (password.isEmpty()) password = "emma";
         
-        usuarioActual = authController.login(username, password);
-        if (usuarioActual != null) {
-            System.out.println("✓ Sesión iniciada correctamente");
+        try {
+            usuarioActual = authController.login(username, password);
+            if (usuarioActual != null) {
+                System.out.println("✓ Sesión iniciada correctamente");
+                System.out.println("Bienvenido, " + usuarioActual.getUsername() + "!");
+            }
+        } catch (Exception e) {
+            // El error ya se muestra en el AuthController
+            System.out.println("\n💡 Sugerencia: Si no tienes una cuenta, regístrate primero (opción 1)");
         }
     }
 
@@ -217,16 +236,22 @@ public class InteractiveMenu {
     private void buscarPartidos() {
         busquedaView.mostrarFormularioBusqueda();
         
-        // Pedir ubicación del usuario
-        System.out.print("Ingrese su ubicación - Latitud: ");
-        double latitud = scanner.nextDouble();
-        scanner.nextLine();
-        
-        System.out.print("Ingrese su ubicación - Longitud: ");
-        double longitud = scanner.nextDouble();
-        scanner.nextLine();
-        
-        Location ubicacionUsuario = new Location(latitud, longitud);
+        // Usar ubicación del usuario si está autenticado, sino usar valores por defecto
+        Location ubicacionUsuario;
+        if (usuarioActual != null && usuarioActual.getUbicacion() != null) {
+            ubicacionUsuario = usuarioActual.getUbicacion();
+            System.out.println("✓ Usando tu ubicación registrada: " + ubicacionUsuario.getDescripcion());
+        } else {
+            System.out.print("Ubicación - Descripción [default: Buenos Aires]: ");
+            String descripcionUbicacion = scanner.nextLine().trim();
+            if (descripcionUbicacion.isEmpty()) descripcionUbicacion = "Buenos Aires";
+            
+            // Coordenadas por defecto de Buenos Aires
+            double latitud = -34.6037;
+            double longitud = -58.3816;
+            
+            ubicacionUsuario = new Location(latitud, longitud, descripcionUbicacion);
+        }
         
         Map<String, Object> criterios = new HashMap<>();
         criterios.put("ubicacionUsuario", ubicacionUsuario);
@@ -284,77 +309,101 @@ public class InteractiveMenu {
     private void crearPartido() {
         partidoFormView.mostrarFormularioCreacion();
         
-        List<Deporte> deportes = catalogoController.obtenerDeportes();
-        System.out.println("Deportes disponibles:");
-        for (int i = 0; i < deportes.size(); i++) {
-            System.out.println((i + 1) + ". " + deportes.get(i).getNombre());
-        }
-        System.out.print("Seleccione deporte: ");
-        int deporteIdx = scanner.nextInt() - 1;
-        scanner.nextLine();
-        Deporte deporte = deportes.get(deporteIdx);
-        
-        System.out.print("Jugadores requeridos: ");
-        int jugadoresRequeridos = scanner.nextInt();
-        scanner.nextLine();
-        
-        System.out.print("Ubicación - Descripción: ");
-        String descripcionUbicacion = scanner.nextLine();
-        
-        System.out.print("Ubicación - Latitud: ");
-        double latitud = scanner.nextDouble();
-        scanner.nextLine();
-        
-        System.out.print("Ubicación - Longitud: ");
-        double longitud = scanner.nextDouble();
-        scanner.nextLine();
-        
-        Location ubicacion = new Location(latitud, longitud, descripcionUbicacion);
-        
-        System.out.print("Duración (minutos): ");
-        int duracion = scanner.nextInt();
-        scanner.nextLine();
-        
-        System.out.print("Fecha y hora (YYYY-MM-DD HH:MM): ");
-        String fechaStr = scanner.nextLine();
-        // Convertir formato de fecha a ISO
-        String fechaISO = fechaStr.replace(" ", "T");
-        if (!fechaISO.contains("T")) {
-            fechaISO = fechaStr + "T00:00";
-        }
-        LocalDateTime fechaHora;
         try {
-            fechaHora = LocalDateTime.parse(fechaISO);
+            List<Deporte> deportes = catalogoController.obtenerDeportes();
+            System.out.println("Deportes disponibles:");
+            for (int i = 0; i < deportes.size(); i++) {
+                System.out.println((i + 1) + ". " + deportes.get(i).getNombre());
+            }
+            System.out.print("Seleccione deporte [default: 1]: ");
+            String deporteInput = scanner.nextLine().trim();
+            int deporteIdx = deporteInput.isEmpty() ? 0 : Integer.parseInt(deporteInput) - 1;
+            Deporte deporte = deportes.get(deporteIdx);
+            
+            System.out.print("Jugadores requeridos [default: 10]: ");
+            String jugadoresInput = scanner.nextLine().trim();
+            int jugadoresRequeridos = jugadoresInput.isEmpty() ? 10 : Integer.parseInt(jugadoresInput);
+            
+            // Usar ubicación del usuario si está autenticado, sino pedir descripción
+            Location ubicacion;
+            if (usuarioActual != null && usuarioActual.getUbicacion() != null) {
+                System.out.print("Ubicación - Descripción [default: usar mi ubicación]: ");
+                String descripcionUbicacion = scanner.nextLine().trim();
+                if (descripcionUbicacion.isEmpty()) {
+                    // Usar ubicación del usuario
+                    ubicacion = usuarioActual.getUbicacion();
+                    System.out.println("✓ Usando tu ubicación registrada: " + ubicacion.getDescripcion());
+                } else {
+                    // Usar coordenadas del usuario pero con nueva descripción
+                    ubicacion = new Location(
+                        usuarioActual.getUbicacion().getLatitud(),
+                        usuarioActual.getUbicacion().getLongitud(),
+                        descripcionUbicacion
+                    );
+                }
+            } else {
+                System.out.print("Ubicación - Descripción [default: Cancha Central]: ");
+                String descripcionUbicacion = scanner.nextLine().trim();
+                if (descripcionUbicacion.isEmpty()) descripcionUbicacion = "Cancha Central";
+                
+                // Coordenadas por defecto de Buenos Aires
+                double latitud = -34.6037;
+                double longitud = -58.3816;
+                
+                ubicacion = new Location(latitud, longitud, descripcionUbicacion);
+            }
+            
+            System.out.print("Duración (minutos) [default: 90]: ");
+            String duracionInput = scanner.nextLine().trim();
+            int duracion = duracionInput.isEmpty() ? 90 : Integer.parseInt(duracionInput);
+            
+            System.out.print("Fecha y hora (YYYY-MM-DD HH:MM) [default: mañana 18:00]: ");
+            String fechaStr = scanner.nextLine().trim();
+            LocalDateTime fechaHora;
+            if (fechaStr.isEmpty()) {
+                fechaHora = LocalDateTime.now().plusDays(1).withHour(18).withMinute(0).withSecond(0).withNano(0);
+            } else {
+                // Convertir formato de fecha a ISO
+                String fechaISO = fechaStr.replace(" ", "T");
+                if (!fechaISO.contains("T")) {
+                    fechaISO = fechaStr + "T00:00";
+                }
+                try {
+                    fechaHora = LocalDateTime.parse(fechaISO);
+                } catch (Exception e) {
+                    System.out.println("Error: Formato de fecha inválido. Use YYYY-MM-DD HH:MM");
+                    return;
+                }
+            }
+            
+            List<Nivel> niveles = catalogoController.obtenerNiveles();
+            System.out.println("Nivel mínimo:");
+            for (int i = 0; i < niveles.size(); i++) {
+                System.out.println((i + 1) + ". " + niveles.get(i).getNombre());
+            }
+            System.out.print("Seleccione [default: 1]: ");
+            String nivelMinInput = scanner.nextLine().trim();
+            int nivelMinIdx = nivelMinInput.isEmpty() ? 0 : Integer.parseInt(nivelMinInput) - 1;
+            Nivel nivelMin = niveles.get(nivelMinIdx);
+            
+            System.out.println("Nivel máximo:");
+            for (int i = 0; i < niveles.size(); i++) {
+                System.out.println((i + 1) + ". " + niveles.get(i).getNombre());
+            }
+            System.out.print("Seleccione [default: 3]: ");
+            String nivelMaxInput = scanner.nextLine().trim();
+            int nivelMaxIdx = nivelMaxInput.isEmpty() ? 2 : Integer.parseInt(nivelMaxInput) - 1;
+            Nivel nivelMax = niveles.get(nivelMaxIdx);
+            
+            Partido partido = partidoCreacionController.crearPartido(
+                deporte, usuarioActual, jugadoresRequeridos, ubicacion, fechaHora, duracion, nivelMin, nivelMax
+            );
+            
+            if (partido != null) {
+                System.out.println("✓ Partido creado exitosamente (ID: " + partido.getId() + ")");
+            }
         } catch (Exception e) {
-            System.out.println("Error: Formato de fecha inválido. Use YYYY-MM-DD HH:MM");
-            return;
-        }
-        
-        List<Nivel> niveles = catalogoController.obtenerNiveles();
-        System.out.println("Nivel mínimo:");
-        for (int i = 0; i < niveles.size(); i++) {
-            System.out.println((i + 1) + ". " + niveles.get(i).getNombre());
-        }
-        System.out.print("Seleccione: ");
-        int nivelMinIdx = scanner.nextInt() - 1;
-        scanner.nextLine();
-        Nivel nivelMin = niveles.get(nivelMinIdx);
-        
-        System.out.println("Nivel máximo:");
-        for (int i = 0; i < niveles.size(); i++) {
-            System.out.println((i + 1) + ". " + niveles.get(i).getNombre());
-        }
-        System.out.print("Seleccione: ");
-        int nivelMaxIdx = scanner.nextInt() - 1;
-        scanner.nextLine();
-        Nivel nivelMax = niveles.get(nivelMaxIdx);
-        
-        Partido partido = partidoCreacionController.crearPartido(
-            deporte, usuarioActual, jugadoresRequeridos, ubicacion, fechaHora, duracion, nivelMin, nivelMax
-        );
-        
-        if (partido != null) {
-            System.out.println("✓ Partido creado exitosamente (ID: " + partido.getId() + ")");
+            System.out.println("❌ Error al crear partido: " + e.getMessage());
         }
     }
 
