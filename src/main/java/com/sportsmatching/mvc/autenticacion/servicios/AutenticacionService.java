@@ -1,4 +1,4 @@
-package com.sportsmatching.mvc.autenticacion;
+package com.sportsmatching.mvc.autenticacion.servicios;
 
 import com.sportsmatching.dominio.Usuario;
 import com.sportsmatching.repository.UsuarioRepository;

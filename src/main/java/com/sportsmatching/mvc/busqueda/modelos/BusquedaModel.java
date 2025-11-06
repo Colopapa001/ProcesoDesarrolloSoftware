@@ -1,7 +1,7 @@
 package com.sportsmatching.mvc.busqueda.modelos;
 
 import com.sportsmatching.dominio.Partido;
-import com.sportsmatching.mvc.busqueda.BusquedaFiltroService;
+import com.sportsmatching.mvc.busqueda.servicios.BusquedaFiltroService;
 import com.sportsmatching.repository.PartidoRepository;
 
 import java.util.List;

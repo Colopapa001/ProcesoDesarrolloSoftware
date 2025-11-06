@@ -1,7 +1,7 @@
 package com.sportsmatching.mvc.autenticacion.modelos;
 
 import com.sportsmatching.dominio.Usuario;
-import com.sportsmatching.mvc.autenticacion.AutenticacionService;
+import com.sportsmatching.mvc.autenticacion.servicios.AutenticacionService;
 
 public class AuthModel {
     private Usuario usuarioActual;

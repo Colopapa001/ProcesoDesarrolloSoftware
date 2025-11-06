@@ -1,4 +1,4 @@
-package com.sportsmatching.mvc.registro;
+package com.sportsmatching.mvc.registro.servicios;
 
 import com.sportsmatching.repository.UsuarioRepository;
 

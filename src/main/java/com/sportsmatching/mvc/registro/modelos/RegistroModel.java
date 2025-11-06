@@ -1,7 +1,7 @@
 package com.sportsmatching.mvc.registro.modelos;
 
 import com.sportsmatching.dominio.Usuario;
-import com.sportsmatching.mvc.registro.UsuarioValidacionService;
+import com.sportsmatching.mvc.registro.servicios.UsuarioValidacionService;
 
 public class RegistroModel {
     private final UsuarioValidacionService validacionService;

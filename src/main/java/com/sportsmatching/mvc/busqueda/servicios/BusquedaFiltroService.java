@@ -1,4 +1,4 @@
-package com.sportsmatching.mvc.busqueda;
+package com.sportsmatching.mvc.busqueda.servicios;
 
 import com.sportsmatching.dominio.Location;
 import com.sportsmatching.dominio.Partido;
