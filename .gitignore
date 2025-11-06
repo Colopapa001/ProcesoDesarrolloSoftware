@@ -99,3 +99,6 @@ local.properties
 *.seed
 *.pid.lock
 
+# Scripts
+run.ps1
+
