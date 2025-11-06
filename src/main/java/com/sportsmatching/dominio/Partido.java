@@ -2,9 +2,9 @@ package com.sportsmatching.dominio;
 
 import com.sportsmatching.dominio.catalogos.Deporte;
 import com.sportsmatching.dominio.catalogos.Nivel;
-import com.sportsmatching.aplicacion.state.PartidoState;
-import com.sportsmatching.aplicacion.state.NecesitamosJugadores;
-import com.sportsmatching.aplicacion.observer.NotificacionSubject;
+import com.sportsmatching.aplicacion.partidos.PartidoState;
+import com.sportsmatching.aplicacion.partidos.NecesitamosJugadores;
+import com.sportsmatching.aplicacion.notificaciones.NotificacionSubject;
 
 import java.time.LocalDateTime;
 import java.util.Date;

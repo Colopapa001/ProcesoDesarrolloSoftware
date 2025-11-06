@@ -4,7 +4,7 @@ import com.sportsmatching.dominio.Partido;
 import com.sportsmatching.dominio.Usuario;
 import com.sportsmatching.presentacion.mvc.partido.modelos.PartidoModel;
 import com.sportsmatching.presentacion.mvc.partido.vistas.PartidoDetailView;
-import com.sportsmatching.aplicacion.observer.NotificacionSubject;
+import com.sportsmatching.aplicacion.notificaciones.NotificacionSubject;
 
 public class PartidoGestionController {
     private final PartidoModel model;

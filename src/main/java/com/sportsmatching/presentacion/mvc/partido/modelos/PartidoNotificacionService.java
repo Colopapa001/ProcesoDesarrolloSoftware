@@ -1,7 +1,7 @@
 package com.sportsmatching.presentacion.mvc.partido.modelos;
 
 import com.sportsmatching.dominio.Partido;
-import com.sportsmatching.aplicacion.observer.NotificacionSubject;
+import com.sportsmatching.aplicacion.notificaciones.NotificacionSubject;
 
 public class PartidoNotificacionService {
     private final NotificacionSubject subject;

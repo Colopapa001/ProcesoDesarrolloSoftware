@@ -28,16 +28,16 @@ import com.sportsmatching.presentacion.mvc.registro.RegistroController;
 import com.sportsmatching.presentacion.mvc.registro.modelos.RegistroModel;
 import com.sportsmatching.presentacion.mvc.registro.RegistroView;
 import com.sportsmatching.presentacion.mvc.registro.servicios.UsuarioValidacionService;
-import com.sportsmatching.aplicacion.observer.EmailObserver;
-import com.sportsmatching.aplicacion.observer.NotificacionSubject;
-import com.sportsmatching.aplicacion.observer.PushObserver;
+import com.sportsmatching.aplicacion.notificaciones.EmailObserver;
+import com.sportsmatching.aplicacion.notificaciones.NotificacionSubject;
+import com.sportsmatching.aplicacion.notificaciones.PushObserver;
 import com.sportsmatching.infraestructura.persistence.CatalogoRepository;
 import com.sportsmatching.infraestructura.persistence.InMemoryCatalogoRepository;
 import com.sportsmatching.infraestructura.persistence.InMemoryPartidoRepository;
 import com.sportsmatching.infraestructura.persistence.InMemoryUsuarioRepository;
 import com.sportsmatching.infraestructura.persistence.UsuarioRepository;
-import com.sportsmatching.aplicacion.strategy.EmparejamientoPorNivel;
-import com.sportsmatching.aplicacion.strategy.MatchmakingService;
+import com.sportsmatching.aplicacion.emparejamiento.EmparejamientoPorNivel;
+import com.sportsmatching.aplicacion.emparejamiento.MatchmakingService;
 import com.sportsmatching.presentacion.view.InteractiveMenu;
 
 public class Main {

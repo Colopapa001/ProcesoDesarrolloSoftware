@@ -3,7 +3,7 @@ package com.sportsmatching.presentacion.mvc.busqueda.servicios;
 import com.sportsmatching.dominio.Location;
 import com.sportsmatching.dominio.Partido;
 import com.sportsmatching.dominio.Usuario;
-import com.sportsmatching.aplicacion.service.DistanciaService;
+import com.sportsmatching.aplicacion.servicios.DistanciaService;
 
 import java.util.Comparator;
 import java.util.List;

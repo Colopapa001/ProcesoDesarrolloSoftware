@@ -5,7 +5,7 @@ import com.sportsmatching.dominio.Partido;
 import com.sportsmatching.dominio.Usuario;
 import com.sportsmatching.dominio.catalogos.Deporte;
 import com.sportsmatching.dominio.catalogos.Nivel;
-import com.sportsmatching.aplicacion.service.DistanciaService;
+import com.sportsmatching.aplicacion.servicios.DistanciaService;
 import com.sportsmatching.presentacion.mvc.autenticacion.AuthController;
 import com.sportsmatching.presentacion.mvc.autenticacion.AuthView;
 import com.sportsmatching.presentacion.mvc.busqueda.BusquedaController;

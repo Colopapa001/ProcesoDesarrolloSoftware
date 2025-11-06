@@ -3,7 +3,7 @@ package com.sportsmatching.presentacion.mvc.partido.modelos;
 import com.sportsmatching.dominio.Partido;
 import com.sportsmatching.dominio.PartidoValidacion;
 import com.sportsmatching.dominio.Usuario;
-import com.sportsmatching.aplicacion.strategy.MatchmakingService;
+import com.sportsmatching.aplicacion.emparejamiento.MatchmakingService;
 
 public class PartidoService {
     private final PartidoValidacion validacion;

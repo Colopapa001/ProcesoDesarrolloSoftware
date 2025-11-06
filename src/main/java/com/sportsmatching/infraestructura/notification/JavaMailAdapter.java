@@ -1,6 +1,6 @@
 package com.sportsmatching.infraestructura.notification;
 
-import com.sportsmatching.aplicacion.service.EmailService;
+import com.sportsmatching.aplicacion.servicios.EmailService;
 
 public class JavaMailAdapter implements NotificationClient {
     private final EmailService emailService;
