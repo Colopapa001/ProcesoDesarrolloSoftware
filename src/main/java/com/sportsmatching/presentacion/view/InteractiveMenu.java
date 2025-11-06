@@ -164,7 +164,7 @@ public class InteractiveMenu {
             String password = scanner.nextLine().trim();
             if (password.isEmpty()) password = "emma";
             
-            List<Nivel> niveles = catalogoController.obtenerNiveles();
+            List<Nivel> niveles = catalogoController.obtenerNivelesSinMostrar();
             System.out.println("Niveles disponibles:");
             for (int i = 0; i < niveles.size(); i++) {
                 System.out.println((i + 1) + ". " + niveles.get(i).getNombre());
@@ -174,7 +174,7 @@ public class InteractiveMenu {
             int nivelIdx = nivelInput.isEmpty() ? 0 : Integer.parseInt(nivelInput) - 1;
             Nivel nivel = niveles.get(nivelIdx);
             
-            List<Deporte> deportes = catalogoController.obtenerDeportes();
+            List<Deporte> deportes = catalogoController.obtenerDeportesSinMostrar();
             System.out.println("Deportes disponibles:");
             for (int i = 0; i < deportes.size(); i++) {
                 System.out.println((i + 1) + ". " + deportes.get(i).getNombre());
@@ -310,7 +310,7 @@ public class InteractiveMenu {
         partidoFormView.mostrarFormularioCreacion();
         
         try {
-            List<Deporte> deportes = catalogoController.obtenerDeportes();
+            List<Deporte> deportes = catalogoController.obtenerDeportesSinMostrar();
             System.out.println("Deportes disponibles:");
             for (int i = 0; i < deportes.size(); i++) {
                 System.out.println((i + 1) + ". " + deportes.get(i).getNombre());
@@ -376,7 +376,7 @@ public class InteractiveMenu {
                 }
             }
             
-            List<Nivel> niveles = catalogoController.obtenerNiveles();
+            List<Nivel> niveles = catalogoController.obtenerNivelesSinMostrar();
             System.out.println("Nivel mínimo:");
             for (int i = 0; i < niveles.size(); i++) {
                 System.out.println((i + 1) + ". " + niveles.get(i).getNombre());

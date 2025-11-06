@@ -26,5 +26,14 @@ public class CatalogoController {
         view.mostrarNiveles(niveles);
         return niveles;
     }
+    
+    // Métodos para obtener listas sin mostrarlas (para uso interno)
+    public List<Deporte> obtenerDeportesSinMostrar() {
+        return model.obtenerDeportes();
+    }
+
+    public List<Nivel> obtenerNivelesSinMostrar() {
+        return model.obtenerNiveles();
+    }
 }
 
