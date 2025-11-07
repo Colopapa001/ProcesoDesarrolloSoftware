@@ -221,9 +221,25 @@ public class InteractiveMenu {
             for (int i = 0; i < deportes.size(); i++) {
                 System.out.println((i + 1) + ". " + deportes.get(i).getNombre());
             }
-            System.out.print("Seleccione deporte favorito [default: 1]: ");
-            String deporteInput = scanner.nextLine().trim();
-            int deporteIdx = deporteInput.isEmpty() ? 0 : Integer.parseInt(deporteInput) - 1;
+            int deporteIdx = -1;
+            while (deporteIdx < 0 || deporteIdx >= deportes.size()) {
+                System.out.print("Seleccione deporte favorito [default: 1]: ");
+                String deporteInput = scanner.nextLine().trim();
+                if (deporteInput.isEmpty()) {
+                    deporteIdx = 0;
+                    break;
+                }
+                try {
+                    int sel = Integer.parseInt(deporteInput);
+                    if (sel >= 1 && sel <= deportes.size()) {
+                        deporteIdx = sel - 1;
+                    } else {
+                        System.out.println("Opción inválida. Ingrese un número entre 1 y " + deportes.size() + ".");
+                    }
+                } catch (NumberFormatException nfe) {
+                    System.out.println("Entrada inválida. Ingrese el número correspondiente al deporte.");
+                }
+            }
             Deporte deporteFavorito = deportes.get(deporteIdx);
             
             // Pedir descripción de ubicación y usar coordenadas por defecto de Buenos Aires
