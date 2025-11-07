@@ -194,9 +194,26 @@ public class InteractiveMenu {
             for (int i = 0; i < niveles.size(); i++) {
                 System.out.println((i + 1) + ". " + niveles.get(i).getNombre());
             }
-            System.out.print("Seleccione nivel [default: 1]: ");
-            String nivelInput = scanner.nextLine().trim();
-            int nivelIdx = nivelInput.isEmpty() ? 0 : Integer.parseInt(nivelInput) - 1;
+            // Validar selección de nivel: obligatoria y debe ser 1..niveles.size()
+            int nivelIdx = -1;
+            while (nivelIdx < 0 || nivelIdx >= niveles.size()) {
+                System.out.print("Seleccione nivel [default: 1]: ");
+                String nivelInput = scanner.nextLine().trim();
+                if (nivelInput.isEmpty()) {
+                    nivelIdx = 0; // default 1
+                    break;
+                }
+                try {
+                    int sel = Integer.parseInt(nivelInput);
+                    if (sel >= 1 && sel <= niveles.size()) {
+                        nivelIdx = sel - 1;
+                    } else {
+                        System.out.println("Opción inválida. Ingrese un número entre 1 y " + niveles.size() + ".");
+                    }
+                } catch (NumberFormatException nfe) {
+                    System.out.println("Entrada inválida. Ingrese el número correspondiente al nivel.");
+                }
+            }
             Nivel nivel = niveles.get(nivelIdx);
             
             List<Deporte> deportes = catalogoController.obtenerDeportesSinMostrar();
