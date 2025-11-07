@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class InMemoryUsuarioRepository implements UsuarioRepository {
     private final Map<Long, Usuario> usuariosById = new HashMap<>();
+    // Usar claves normalizadas a minúsculas para evitar duplicados por diferencias de mayúsculas
     private final Map<String, Usuario> usuariosByUsername = new HashMap<>();
     private final Map<String, Usuario> usuariosByEmail = new HashMap<>();
     private final AtomicLong idGenerator = new AtomicLong(1);
@@ -17,8 +18,9 @@ public class InMemoryUsuarioRepository implements UsuarioRepository {
             usuario.setId(idGenerator.getAndIncrement());
         }
         usuariosById.put(usuario.getId(), usuario);
-        usuariosByUsername.put(usuario.getUsername(), usuario);
-        usuariosByEmail.put(usuario.getEmail(), usuario);
+        // Guardar usando claves normalizadas a minúsculas para evitar duplicados
+        usuariosByUsername.put(usuario.getUsername().toLowerCase(), usuario);
+        usuariosByEmail.put(usuario.getEmail().toLowerCase(), usuario);
         return usuario;
     }
 
@@ -29,12 +31,14 @@ public class InMemoryUsuarioRepository implements UsuarioRepository {
 
     @Override
     public Optional<Usuario> findByUsername(String username) {
-        return Optional.ofNullable(usuariosByUsername.get(username));
+        // Búsqueda case-insensitive usando clave normalizada
+        return Optional.ofNullable(usuariosByUsername.get(username.toLowerCase()));
     }
 
     @Override
     public Optional<Usuario> findByEmail(String email) {
-        return Optional.ofNullable(usuariosByEmail.get(email));
+        // Búsqueda case-insensitive usando clave normalizada
+        return Optional.ofNullable(usuariosByEmail.get(email.toLowerCase()));
     }
 
     @Override

@@ -10,8 +10,18 @@ public class UsuarioValidacionService {
     }
 
     public boolean validarUnicidad(String email, String username) {
-        return usuarioRepository.findByEmail(email).isEmpty() &&
-               usuarioRepository.findByUsername(username).isEmpty();
+        boolean emailExiste = usuarioRepository.findByEmail(email).isPresent();
+        boolean usernameExiste = usuarioRepository.findByUsername(username).isPresent();
+        
+        if (emailExiste && usernameExiste) {
+            throw new IllegalArgumentException("El email y el username ya están registrados. Por favor, utiliza otros valores.");
+        } else if (emailExiste) {
+            throw new IllegalArgumentException("El email ya está registrado. Por favor, utiliza otro email.");
+        } else if (usernameExiste) {
+            throw new IllegalArgumentException("El username ya está registrado. Por favor, utiliza otro username.");
+        }
+        
+        return true;
     }
 
     public boolean validarDatos(String username, String email, String password) {

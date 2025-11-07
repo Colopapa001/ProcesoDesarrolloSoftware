@@ -84,8 +84,14 @@ public class Main {
         PartidoValidacion partidoValidacion = new PartidoValidacion();
 
         // Services
+        com.sportsmatching.aplicacion.servicios.DistanciaService distanciaService = new com.sportsmatching.aplicacion.servicios.DistanciaService();
         PartidoService partidoService = new PartidoService(partidoValidacion, matchmakingService);
-        PartidoNotificacionService partidoNotificacionService = new PartidoNotificacionService(notificacionSubject);
+        PartidoNotificacionService partidoNotificacionService = new PartidoNotificacionService(
+            notificacionSubject, 
+            usuarioRepository, 
+            distanciaService, 
+            javaMailAdapter
+        );
 
         // MVC - Registro
         UsuarioValidacionService usuarioValidacionService = new UsuarioValidacionService(usuarioRepository);

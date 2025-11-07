@@ -20,10 +20,8 @@ public class RegistroModel {
         // Validar datos básicos (lanzará excepción con mensaje específico si falla)
         validacionService.validarDatos(username, email, password);
         
-        // Validar unicidad
-        if (!validacionService.validarUnicidad(email, username)) {
-            throw new IllegalArgumentException("Email o username ya existe");
-        }
+        // Validar unicidad (lanzará excepción con mensaje específico si falla)
+        validacionService.validarUnicidad(email, username);
         
         // Validar ubicación (la validación de coordenadas se hace en el constructor de Location)
         validacionService.validarUbicacion(ubicacion);
