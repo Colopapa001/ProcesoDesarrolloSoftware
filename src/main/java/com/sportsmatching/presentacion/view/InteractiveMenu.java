@@ -20,6 +20,8 @@ import com.sportsmatching.presentacion.mvc.partido.vistas.PartidoFormView;
 import com.sportsmatching.presentacion.mvc.partido.vistas.PartidoListView;
 import com.sportsmatching.presentacion.mvc.registro.RegistroController;
 import com.sportsmatching.presentacion.mvc.registro.RegistroView;
+import com.sportsmatching.infra.MockDomainDataStore; 
+
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -80,6 +82,14 @@ public class InteractiveMenu {
         System.out.println("║  Sistema de Gestión de Partidos       ║");
         System.out.println("║  Deportivos                           ║");
         System.out.println("╚════════════════════════════════════════╝\n");
+
+        // Mostrar resumen de datos mock cargados (opcional)
+        try {
+            System.out.println("Datos cargados: usuarios=" + MockDomainDataStore.allUsuarios().size()
+                + " partidos=" + MockDomainDataStore.allPartidos().size());
+        } catch (NoClassDefFoundError | Exception ignored) {
+            // Si no usás MockDomainDataStore (no lo agregaste), ignorar
+        }
 
         while (true) {
             if (usuarioActual == null) {
@@ -233,9 +243,10 @@ public class InteractiveMenu {
         catalogoController.obtenerNiveles();
     }
 
+    // ...existing code...
     private void buscarPartidos() {
         busquedaView.mostrarFormularioBusqueda();
-        
+
         // Usar ubicación del usuario si está autenticado, sino usar valores por defecto
         Location ubicacionUsuario;
         if (usuarioActual != null && usuarioActual.getUbicacion() != null) {
@@ -245,66 +256,105 @@ public class InteractiveMenu {
             System.out.print("Ubicación - Descripción [default: Buenos Aires]: ");
             String descripcionUbicacion = scanner.nextLine().trim();
             if (descripcionUbicacion.isEmpty()) descripcionUbicacion = "Buenos Aires";
-            
+
             // Coordenadas por defecto de Buenos Aires
             double latitud = -34.6037;
             double longitud = -58.3816;
-            
+
             ubicacionUsuario = new Location(latitud, longitud, descripcionUbicacion);
         }
-        
+
         Map<String, Object> criterios = new HashMap<>();
         criterios.put("ubicacionUsuario", ubicacionUsuario);
-        
+
+        boolean filtrarDisponibilidad = false;
         // Si hay usuario autenticado, usar sus preferencias
+        String nivelUsuarioStr = null;
+        String deportePrefStr = null;
         if (usuarioActual != null) {
             criterios.put("nivelUsuario", usuarioActual);
             criterios.put("deporteFavorito", usuarioActual);
+            if (usuarioActual.getNivel() != null) {
+                nivelUsuarioStr = usuarioActual.getNivel().getNombre();
+            }
+            if (usuarioActual.getDeporteFavorito() != null) {
+                deportePrefStr = usuarioActual.getDeporteFavorito().getNombre();
+            }
             System.out.print("¿Filtrar por disponibilidad? (s/n): ");
             String filtro = scanner.nextLine();
             if (filtro.equalsIgnoreCase("s")) {
                 criterios.put("disponibilidad", true);
+                filtrarDisponibilidad = true;
             }
         } else {
             System.out.print("¿Filtrar por disponibilidad? (s/n): ");
             String filtro = scanner.nextLine();
             if (filtro.equalsIgnoreCase("s")) {
                 criterios.put("disponibilidad", true);
+                filtrarDisponibilidad = true;
             }
         }
-        
+
         List<Partido> resultados = busquedaController.buscarPartidos(criterios);
-        
-        if (!resultados.isEmpty()) {
-            System.out.println("\n=== Partidos encontrados ===");
-            for (Partido p : resultados) {
-                double distancia = distanciaService.calcularDistancia(ubicacionUsuario, p.getUbicacion());
-                System.out.println("ID: " + p.getId() + 
-                    " | Deporte: " + p.getDeporte().getNombre() + 
+
+        // Si controller no devuelve resultados, usar fallback al MockDomainDataStore (datos mock cargados)
+        if (resultados == null || resultados.isEmpty()) {
+            try {
+                String ubicDesc = ubicacionUsuario != null ? ubicacionUsuario.getDescripcion() : "";
+                var mockResultados = MockDomainDataStore.searchPartidos(ubicDesc, filtrarDisponibilidad, nivelUsuarioStr, deportePrefStr);
+
+                if (mockResultados != null && !mockResultados.isEmpty()) {
+                    System.out.println("\n=== Resultados (desde datos mock) ===");
+                    java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+                    for (var p : mockResultados) {
+                        int inscritos = (p.partidoJugadores == null || p.partidoJugadores.jugadores == null)
+                                ? 0 : p.partidoJugadores.jugadores.size();
+                        System.out.println("ID: " + p.id +
+                                " | Deporte: " + p.deporte +
+                                " | Ubicación: " + (p.ubicacion != null ? p.ubicacion.descripcion : "n/d") +
+                                " | Fecha: " + (p.fechaHora != null ? p.fechaHora.format(fmt) : "n/d") +
+                                " | Cupos: " + inscritos + "/" + p.jugadoresRequeridos +
+                                " | Nivel: " + p.nivelMin + "-" + p.nivelMax +
+                                " | Organizador: " + p.organizadorUsername);
+                    }
+                    return;
+                }
+            } catch (NoClassDefFoundError | Exception ignored) {
+                // Si no existe MockDomainDataStore o falla, continuar
+            }
+
+            System.out.println("No se encontraron partidos que coincidan con los criterios de búsqueda.");
+            return;
+        }
+
+        // Si el controlador devolvió resultados, mostrarlos normalmente
+        System.out.println("\n=== Partidos encontrados ===");
+        for (Partido p : resultados) {
+            double distancia = distanciaService.calcularDistancia(ubicacionUsuario, p.getUbicacion());
+            System.out.println("ID: " + p.getId() +
+                    " | Deporte: " + p.getDeporte().getNombre() +
                     " | Ubicación: " + p.getUbicacion().getDescripcion() +
                     " | Distancia: " + String.format("%.2f", distancia) + " km" +
                     " | Estado: " + p.getEstado().getNombreEstado() +
                     " | Cupos: " + p.getPartidoJugadores().obtenerCantidadDisponible() + "/" + p.getJugadoresRequeridos());
-            }
-            
-            System.out.println("\n¿Ver detalle de algún partido? (s/n): ");
-            String verDetalle = scanner.nextLine();
-            if (verDetalle.equalsIgnoreCase("s")) {
-                System.out.print("Ingrese ID del partido: ");
-                Long id = scanner.nextLong();
-                scanner.nextLine();
-                resultados.stream()
-                    .filter(p -> p.getId().equals(id))
-                    .findFirst()
-                    .ifPresentOrElse(
-                        busquedaView::mostrarDetallePartido,
-                        () -> System.out.println("Partido no encontrado")
-                    );
-            }
-        } else {
-            System.out.println("No se encontraron partidos que coincidan con los criterios de búsqueda.");
+        }
+
+        System.out.println("\n¿Ver detalle de algún partido? (s/n): ");
+        String verDetalle = scanner.nextLine();
+        if (verDetalle.equalsIgnoreCase("s")) {
+            System.out.print("Ingrese ID del partido: ");
+            Long id = scanner.nextLong();
+            scanner.nextLine();
+            resultados.stream()
+                .filter(p -> p.getId().equals(id))
+                .findFirst()
+                .ifPresentOrElse(
+                    busquedaView::mostrarDetallePartido,
+                    () -> System.out.println("Partido no encontrado")
+                );
         }
     }
+
 
     private void crearPartido() {
         partidoFormView.mostrarFormularioCreacion();

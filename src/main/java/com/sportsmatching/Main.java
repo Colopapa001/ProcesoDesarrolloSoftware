@@ -39,6 +39,7 @@ import com.sportsmatching.infraestructura.persistence.UsuarioRepository;
 import com.sportsmatching.aplicacion.emparejamiento.EmparejamientoPorNivel;
 import com.sportsmatching.aplicacion.emparejamiento.MatchmakingService;
 import com.sportsmatching.presentacion.view.InteractiveMenu;
+import com.sportsmatching.infra.DataSeeder;
 
 public class Main {
     public static void main(String[] args) {
@@ -60,6 +61,8 @@ public class Main {
         com.sportsmatching.infraestructura.persistence.PartidoRepository partidoRepository = new InMemoryPartidoRepository();
         CatalogoRepository catalogoRepository = new InMemoryCatalogoRepository();
         com.sportsmatching.presentacion.mvc.partido.modelos.PartidoRepository partidoRepositoryMVC = new com.sportsmatching.presentacion.mvc.partido.modelos.InMemoryPartidoRepository();
+
+        DataSeeder.seed();
 
         // Strategy
         MatchmakingService matchmakingService = new MatchmakingService(new EmparejamientoPorNivel());
