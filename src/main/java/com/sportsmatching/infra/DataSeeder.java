@@ -6,6 +6,13 @@ import com.sportsmatching.dominio.catalogos.Nivel;
 import com.sportsmatching.infraestructura.persistence.CatalogoRepository;
 import com.sportsmatching.infraestructura.persistence.UsuarioRepository;
 import com.sportsmatching.presentacion.mvc.partido.modelos.PartidoRepository;
+import com.sportsmatching.aplicacion.partidos.Cancelado;
+import com.sportsmatching.aplicacion.partidos.Confirmado;
+import com.sportsmatching.aplicacion.partidos.EnJuego;
+import com.sportsmatching.aplicacion.partidos.Finalizado;
+import com.sportsmatching.aplicacion.partidos.NecesitamosJugadores;
+import com.sportsmatching.aplicacion.partidos.PartidoArmado;
+import com.sportsmatching.aplicacion.partidos.PartidoState;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -43,6 +50,11 @@ public class DataSeeder {
         MockDomainDataStore.UsuarioDTO u10 = MockDomainDataStore.addUsuario("sofia","sofia@mail.com","pwd7","Intermedio","Fútbol", palermo);
         MockDomainDataStore.UsuarioDTO u11 = MockDomainDataStore.addUsuario("facu","facu@mail.com","pwd8","Intermedio","Básquet", centro);
         MockDomainDataStore.UsuarioDTO u12 = MockDomainDataStore.addUsuario("carla","carla@mail.com","pwd9","Avanzado","Tenis", recoleta);
+        MockDomainDataStore.UsuarioDTO u13 = MockDomainDataStore.addUsuario("papa","joseipapa@hotmail.com","papa","Intermedio","Fútbol", palermo);
+        MockDomainDataStore.UsuarioDTO u14 = MockDomainDataStore.addUsuario("ariel","Silvestreariel@gmail.com","ariel","Intermedio","Fútbol", palermo);
+        MockDomainDataStore.UsuarioDTO u15 = MockDomainDataStore.addUsuario("fran","fran.haedo3@gmail.com","fran","Intermedio","Fútbol", palermo);
+        MockDomainDataStore.UsuarioDTO u16 = MockDomainDataStore.addUsuario("profe","matruiz@uade.edu.ar","profe","Intermedio","Fútbol", palermo);
+        MockDomainDataStore.UsuarioDTO u17 = MockDomainDataStore.addUsuario("emma","emma.maidana@gmail.com","emma","Intermedio","Fútbol", palermo);
 
         // Crear partidos (>=10) - muchos "Intermedio" en zonas cercanas (Palermo, Centro, Recoleta)
         LocalDateTime base = LocalDateTime.now().plusDays(1).withHour(18).withMinute(0);
@@ -58,7 +70,7 @@ public class DataSeeder {
         MockDomainDataStore.PartidoDTO p10 = MockDomainDataStore.addPartido("Fútbol", u1.username, 10, "CREADO", palermo, base.plusDays(5), 60, "Intermedio", "Avanzado");
         MockDomainDataStore.PartidoDTO p11 = MockDomainDataStore.addPartido("Fútbol", u3.username, 10, "CREADO", laPlata, base.plusDays(1).plusHours(3), 60, "Principiante", "Intermedio");
         MockDomainDataStore.PartidoDTO p12 = MockDomainDataStore.addPartido("Fútbol", u7.username, 10, "CREADO", palermo, base.plusDays(2).plusHours(2), 60, "Intermedio", "Avanzado");
-
+        MockDomainDataStore.PartidoDTO p13 = MockDomainDataStore.addPartido("Fútbol", u13.username, 5, "FINALIZADO", palermo, base.minusDays(2), 60, "Intermedio", "Avanzado");
         // Agregar algunos jugadores a partidos (simula inscripciones)
         MockDomainDataStore.addJugadorToPartido(p1.id, u6);
         MockDomainDataStore.addJugadorToPartido(p1.id, u7);
@@ -68,6 +80,12 @@ public class DataSeeder {
         MockDomainDataStore.addJugadorToPartido(p3.id, u2);
         MockDomainDataStore.addJugadorToPartido(p4.id, u11);
         MockDomainDataStore.addJugadorToPartido(p8.id, u5);
+        MockDomainDataStore.addJugadorToPartido(p13.id, u13);
+        MockDomainDataStore.addJugadorToPartido(p13.id, u14);
+        MockDomainDataStore.addJugadorToPartido(p13.id, u15);
+        MockDomainDataStore.addJugadorToPartido(p13.id, u16);
+        MockDomainDataStore.addJugadorToPartido(p13.id, u17);
+
 
         // Estadísticas y comentarios de ejemplo
         MockDomainDataStore.setEstadisticas(p1.id,
@@ -158,6 +176,7 @@ public class DataSeeder {
                 // Crear partido
                 Partido partido = new Partido(deporte, organizador, pDTO.jugadoresRequeridos, 
                                               ubicacion, pDTO.fechaHora, pDTO.duracion, nivelMin, nivelMax);
+                partido.setEstado(mapearEstado(pDTO.estado));
                 
                 // Establecer ID
                 partido.setId((long) pDTO.id);
@@ -195,5 +214,20 @@ public class DataSeeder {
         }
         
         System.out.println("✓ Cargados " + partidosCargados + " partidos en el repositorio real");
+    }
+
+    private static PartidoState mapearEstado(String estado) {
+        if (estado == null) {
+            return new NecesitamosJugadores();
+        }
+        return switch (estado.toUpperCase()) {
+            case "PARTIDO ARMADO", "ARMADO" -> new PartidoArmado();
+            case "CONFIRMADO" -> new Confirmado();
+            case "EN JUEGO", "EN_JUEGO", "PLAYING" -> new EnJuego();
+            case "FINALIZADO" -> new Finalizado();
+            case "CANCELADO" -> new Cancelado();
+            case "NECESITAMOS JUGADORES", "NECESITAMOS_JUGADORES", "CREADO" -> new NecesitamosJugadores();
+            default -> new NecesitamosJugadores();
+        };
     }
 }

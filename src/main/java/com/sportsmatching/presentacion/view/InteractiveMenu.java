@@ -105,6 +105,16 @@ public class InteractiveMenu {
             } else {
                 mostrarMenuAutenticado();
             }
+
+            esperarRegresoMenu();
+        }
+    }
+
+    private void esperarRegresoMenu() {
+        try {
+            Thread.sleep(2000); // 2 segundos para permitir leer resultados
+        } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
         }
     }
 
