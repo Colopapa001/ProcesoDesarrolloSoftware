@@ -28,7 +28,7 @@ public class EmailService {
                 sendRealEmail(destino, asunto, cuerpo);
                 System.out.println("✓ Email enviado exitosamente a: " + destino);
                 return;
-            } catch (Exception e) {
+            } catch (MessagingException | RuntimeException e) {
                 System.err.println("⚠ Error al enviar email real: " + e.getMessage());
                 System.out.println("Guardando email en archivo como respaldo...");
             }

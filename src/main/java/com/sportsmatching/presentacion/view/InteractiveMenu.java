@@ -5,7 +5,7 @@ import com.sportsmatching.dominio.Partido;
 import com.sportsmatching.dominio.Usuario;
 import com.sportsmatching.dominio.catalogos.Deporte;
 import com.sportsmatching.dominio.catalogos.Nivel;
-import com.sportsmatching.aplicacion.servicios.DistanciaService;
+import com.sportsmatching.aplicacion.servicios.DistanceCalculator;
 import com.sportsmatching.presentacion.mvc.autenticacion.AuthController;
 import com.sportsmatching.presentacion.mvc.autenticacion.AuthView;
 import com.sportsmatching.presentacion.mvc.autenticacion.servicios.AutenticacionService;
@@ -26,6 +26,7 @@ import com.sportsmatching.infra.MockDomainDataStore;
 
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,19 +53,20 @@ public class InteractiveMenu {
     private final PartidoDetailView partidoDetailView;
     private final PartidoFormView partidoFormView;
     private final PartidoModel partidoModel;
-    private final DistanciaService distanciaService;
+    private final DistanceCalculator distanceCalculator;
 
     public InteractiveMenu(RegistroController registroController, RegistroView registroView,
                           AuthController authController, AuthView authView,
                           BusquedaController busquedaController, BusquedaView busquedaView,
                           CatalogoController catalogoController, CatalogoView catalogoView,
-                          PartidoCreacionController partidoCreacionController,
-                          PartidoGestionController partidoGestionController,
-                          PartidoEstadisticasController partidoEstadisticasController,
-                          PartidoListView partidoListView,
-                          PartidoDetailView partidoDetailView,
-                          PartidoFormView partidoFormView,
-                          PartidoModel partidoModel) {
+                            PartidoCreacionController partidoCreacionController,
+                            PartidoGestionController partidoGestionController,
+                            PartidoEstadisticasController partidoEstadisticasController,
+                            PartidoListView partidoListView,
+                            PartidoDetailView partidoDetailView,
+                            PartidoFormView partidoFormView,
+                            PartidoModel partidoModel,
+                            DistanceCalculator distanceCalculator) {
         this.registroController = registroController;
         this.registroView = registroView;
         this.authController = authController;
@@ -80,7 +82,7 @@ public class InteractiveMenu {
         this.partidoDetailView = partidoDetailView;
         this.partidoFormView = partidoFormView;
         this.partidoModel = partidoModel;
-        this.distanciaService = new DistanciaService();
+        this.distanceCalculator = distanceCalculator;
     }
 
     public void run() {
@@ -93,7 +95,7 @@ public class InteractiveMenu {
         try {
             System.out.println("Datos cargados: usuarios=" + MockDomainDataStore.allUsuarios().size()
                 + " partidos=" + MockDomainDataStore.allPartidos().size());
-        } catch (NoClassDefFoundError | Exception ignored) {
+        } catch (NoClassDefFoundError | RuntimeException ignored) {
             // Si no usás MockDomainDataStore (no lo agregaste), ignorar
         }
 
@@ -262,8 +264,10 @@ public class InteractiveMenu {
             if (exito) {
                 System.out.println("✓ Usuario registrado exitosamente");
             }
-        } catch (Exception e) {
-            System.out.println("❌ Error al registrar usuario: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            System.out.println("❌ " + e.getMessage());
+        } catch (RuntimeException e) {
+            System.out.println("❌ Error inesperado al registrar usuario: " + e.getMessage());
         }
     }
 
@@ -284,8 +288,8 @@ public class InteractiveMenu {
                 System.out.println("✓ Sesión iniciada correctamente");
                 System.out.println("Bienvenido, " + usuarioActual.getUsername() + "!");
             }
-        } catch (Exception e) {
-            // El error ya se muestra en el AuthController
+        } catch (IllegalArgumentException e) {
+            System.out.println("❌ " + e.getMessage());
             System.out.println("\n💡 Sugerencia: Si no tienes una cuenta, regístrate primero (opción 1)");
         }
     }
@@ -377,7 +381,7 @@ public class InteractiveMenu {
                     System.out.println("No se encontraron partidos que coincidan con los criterios de búsqueda.");
                     return;
                 }
-            } catch (NoClassDefFoundError | Exception ignored) {
+            } catch (NoClassDefFoundError | RuntimeException ignored) {
                 // Si no existe MockDomainDataStore o falla, continuar
             }
 
@@ -391,7 +395,7 @@ public class InteractiveMenu {
         if (!usandoMockData && resultados != null && !resultados.isEmpty()) {
             System.out.println("\n=== Partidos encontrados ===");
             for (Partido p : resultados) {
-                double distancia = distanciaService.calcularDistancia(ubicacionUsuario, p.getUbicacion());
+                double distancia = distanceCalculator.calcularDistancia(ubicacionUsuario, p.getUbicacion());
                 System.out.println("ID: " + p.getId() +
                         " | Deporte: " + p.getDeporte().getNombre() +
                         " | Ubicación: " + p.getUbicacion().getDescripcion() +
@@ -490,7 +494,9 @@ public class InteractiveMenu {
                 }
             } catch (NumberFormatException e) {
                 System.out.println("ID inválido");
-            } catch (Exception e) {
+            } catch (IllegalArgumentException e) {
+                System.out.println("❌ " + e.getMessage());
+            } catch (RuntimeException e) {
                 System.out.println("❌ Error al unirse al partido: " + e.getMessage());
             }
         } else if (opcion.equals("2") && usuarioActual == null) {
@@ -563,7 +569,7 @@ public class InteractiveMenu {
                 }
                 try {
                     fechaHora = LocalDateTime.parse(fechaISO);
-                } catch (Exception e) {
+                } catch (DateTimeParseException e) {
                     System.out.println("Error: Formato de fecha inválido. Use YYYY-MM-DD HH:MM");
                     return;
                 }
@@ -595,7 +601,9 @@ public class InteractiveMenu {
             if (partido != null) {
                 System.out.println("✓ Partido creado exitosamente (ID: " + partido.getId() + ")");
             }
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
+            System.out.println("❌ " + e.getMessage());
+        } catch (RuntimeException e) {
             System.out.println("❌ Error al crear partido: " + e.getMessage());
         }
     }
@@ -744,7 +752,9 @@ public class InteractiveMenu {
             }
         } catch (NumberFormatException e) {
             System.out.println("❌ ID inválido");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
+            System.out.println("❌ " + e.getMessage());
+        } catch (RuntimeException e) {
             System.out.println("❌ Error al gestionar partido: " + e.getMessage());
         }
     }
@@ -841,7 +851,9 @@ public class InteractiveMenu {
             }
         } catch (NumberFormatException e) {
             System.out.println("❌ ID inválido");
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
+            System.out.println("❌ " + e.getMessage());
+        } catch (RuntimeException e) {
             System.out.println("❌ Error al agregar estadísticas/comentarios: " + e.getMessage());
         }
     }

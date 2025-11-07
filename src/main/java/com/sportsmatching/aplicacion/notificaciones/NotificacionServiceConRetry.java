@@ -14,7 +14,7 @@ public class NotificacionServiceConRetry extends NotificacionServiceDecorator {
             try {
                 servicio.enviar(destino, asunto, cuerpo);
                 return;
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 if (i == maxIntentos - 1) {
                     throw e;
                 }
@@ -26,7 +26,7 @@ public class NotificacionServiceConRetry extends NotificacionServiceDecorator {
         try {
             servicio.enviar(destino, asunto, cuerpo);
             return true;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return false;
         }
     }

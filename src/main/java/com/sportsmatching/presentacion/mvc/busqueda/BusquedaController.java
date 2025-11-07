@@ -85,7 +85,7 @@ public class BusquedaController {
                 // Retornamos lista vacía porque no tenemos objetos Partido mapeados desde el DTO mock
                 return Collections.emptyList();
             }
-        } catch (NoClassDefFoundError | Exception ignored) {
+        } catch (NoClassDefFoundError | RuntimeException ignored) {
             // Si no existe MockDomainDataStore o falla, continuar
         }
 

@@ -17,8 +17,13 @@ import com.sportsmatching.presentacion.mvc.catalogos.modelos.CatalogoModel;
 import com.sportsmatching.presentacion.mvc.partido.controladores.PartidoCreacionController;
 import com.sportsmatching.presentacion.mvc.partido.controladores.PartidoEstadisticasController;
 import com.sportsmatching.presentacion.mvc.partido.controladores.PartidoGestionController;
+import com.sportsmatching.presentacion.mvc.partido.modelos.DefaultPartidoNotificacionService;
+import com.sportsmatching.presentacion.mvc.partido.modelos.HtmlPartidoEmailBuilder;
+import com.sportsmatching.presentacion.mvc.partido.modelos.NearbyInterestedRecipientSelector;
+import com.sportsmatching.presentacion.mvc.partido.modelos.PartidoEmailBuilder;
 import com.sportsmatching.presentacion.mvc.partido.modelos.PartidoModel;
 import com.sportsmatching.presentacion.mvc.partido.modelos.PartidoNotificacionService;
+import com.sportsmatching.presentacion.mvc.partido.modelos.PartidoRecipientSelector;
 import com.sportsmatching.presentacion.mvc.partido.modelos.PartidoRepository;
 import com.sportsmatching.presentacion.mvc.partido.modelos.PartidoService;
 import com.sportsmatching.presentacion.mvc.partido.vistas.PartidoDetailView;
@@ -38,6 +43,8 @@ import com.sportsmatching.infraestructura.persistence.InMemoryUsuarioRepository;
 import com.sportsmatching.infraestructura.persistence.UsuarioRepository;
 import com.sportsmatching.aplicacion.emparejamiento.EmparejamientoPorNivel;
 import com.sportsmatching.aplicacion.emparejamiento.MatchmakingService;
+import com.sportsmatching.aplicacion.servicios.DistanceCalculator;
+import com.sportsmatching.aplicacion.servicios.DistanciaService;
 import com.sportsmatching.presentacion.view.InteractiveMenu;
 import com.sportsmatching.infra.DataSeeder;
 
@@ -84,14 +91,16 @@ public class Main {
         PartidoValidacion partidoValidacion = new PartidoValidacion();
 
         // Services
-        com.sportsmatching.aplicacion.servicios.DistanciaService distanciaService = new com.sportsmatching.aplicacion.servicios.DistanciaService();
-        PartidoService partidoService = new PartidoService(partidoValidacion, matchmakingService);
-        PartidoNotificacionService partidoNotificacionService = new PartidoNotificacionService(
-            notificacionSubject, 
-            usuarioRepository, 
-            distanciaService, 
+        DistanceCalculator distanceCalculator = new DistanciaService();
+        PartidoRecipientSelector recipientSelector = new NearbyInterestedRecipientSelector(usuarioRepository, distanceCalculator, 50.0);
+        PartidoEmailBuilder partidoEmailBuilder = new HtmlPartidoEmailBuilder();
+        PartidoNotificacionService partidoNotificacionService = new DefaultPartidoNotificacionService(
+            notificacionSubject,
+            recipientSelector,
+            partidoEmailBuilder,
             javaMailAdapter
         );
+        PartidoService partidoService = new PartidoService(partidoValidacion, matchmakingService, partidoNotificacionService);
 
         // MVC - Registro
         UsuarioValidacionService usuarioValidacionService = new UsuarioValidacionService(usuarioRepository);
@@ -106,7 +115,7 @@ public class Main {
         AuthController authController = new AuthController(authModel, authView);
 
         // MVC - Búsqueda
-        BusquedaFiltroService busquedaFiltroService = new BusquedaFiltroService();
+        BusquedaFiltroService busquedaFiltroService = new BusquedaFiltroService(distanceCalculator);
         BusquedaModel busquedaModel = new BusquedaModel(partidoRepository, busquedaFiltroService);
         BusquedaView busquedaView = new BusquedaView();
         BusquedaController busquedaController = new BusquedaController(busquedaModel, busquedaView);
@@ -137,7 +146,8 @@ public class Main {
             partidoListView,
             partidoDetailView,
             partidoFormView,
-            partidoModel
+            partidoModel,
+            distanceCalculator
         );
 
         // Mostrar configuración de email

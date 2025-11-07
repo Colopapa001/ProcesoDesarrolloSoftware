@@ -15,7 +15,7 @@ public class NotificacionServiceConLogging extends NotificacionServiceDecorator 
         try {
             servicio.enviar(destino, asunto, cuerpo);
             registrarEnvio(destino, true);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             registrarEnvio(destino, false);
             throw e;
         }

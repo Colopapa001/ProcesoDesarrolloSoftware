@@ -9,14 +9,13 @@ import com.sportsmatching.aplicacion.partidos.PartidoState;
 public class PartidoService {
     private final PartidoValidacion validacion;
     private final MatchmakingService matchmakingService;
-    private PartidoNotificacionService notificacionService;
+    private final PartidoNotificacionService notificacionService;
 
-    public PartidoService(PartidoValidacion validacion, MatchmakingService matchmakingService) {
+    public PartidoService(PartidoValidacion validacion,
+                          MatchmakingService matchmakingService,
+                          PartidoNotificacionService notificacionService) {
         this.validacion = validacion;
         this.matchmakingService = matchmakingService;
-    }
-
-    public void setNotificacionService(PartidoNotificacionService notificacionService) {
         this.notificacionService = notificacionService;
     }
 
@@ -29,7 +28,7 @@ public class PartidoService {
         if (resultado) {
             partido.getEstado().onJugadorAgregado(partido);
             // Notificar si el estado cambió
-            if (notificacionService != null && !estadoAnterior.getClass().equals(partido.getEstado().getClass())) {
+            if (!estadoAnterior.getClass().equals(partido.getEstado().getClass())) {
                 notificacionService.notificarCambioEstado(partido, partido.getEstado().getNombreEstado());
             }
         }
@@ -54,7 +53,7 @@ public class PartidoService {
                 // Cuando se remueve un jugador, el estado podría cambiar
                 partido.getEstado().onJugadorRemovido(partido);
                 // Notificar si el estado cambió
-                if (notificacionService != null && !estadoAnterior.getClass().equals(partido.getEstado().getClass())) {
+                if (!estadoAnterior.getClass().equals(partido.getEstado().getClass())) {
                     notificacionService.notificarCambioEstado(partido, partido.getEstado().getNombreEstado());
                 }
             }

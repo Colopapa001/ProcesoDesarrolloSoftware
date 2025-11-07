@@ -3,7 +3,7 @@ package com.sportsmatching.presentacion.mvc.busqueda.servicios;
 import com.sportsmatching.dominio.Location;
 import com.sportsmatching.dominio.Partido;
 import com.sportsmatching.dominio.Usuario;
-import com.sportsmatching.aplicacion.servicios.DistanciaService;
+import com.sportsmatching.aplicacion.servicios.DistanceCalculator;
 
 import java.util.Comparator;
 import java.util.List;
@@ -11,11 +11,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class BusquedaFiltroService {
-    private final DistanciaService distanciaService;
+    private final DistanceCalculator distanceCalculator;
     private static final double DISTANCIA_MAXIMA_KM = 50.0; // Radio de búsqueda en km
 
-    public BusquedaFiltroService() {
-        this.distanciaService = new DistanciaService();
+    public BusquedaFiltroService(DistanceCalculator distanceCalculator) {
+        this.distanceCalculator = distanceCalculator;
     }
 
     public List<Partido> filtrarPorDisponibilidad(List<Partido> partidos) {
@@ -37,11 +37,11 @@ public class BusquedaFiltroService {
             Location ubicacionUsuario = (Location) filtros.get("ubicacionUsuario");
             resultado = resultado.stream()
                 .filter(p -> {
-                    double distancia = distanciaService.calcularDistancia(ubicacionUsuario, p.getUbicacion());
+                    double distancia = distanceCalculator.calcularDistancia(ubicacionUsuario, p.getUbicacion());
                     return distancia <= DISTANCIA_MAXIMA_KM;
                 })
                 .sorted(Comparator.comparingDouble(p -> 
-                    distanciaService.calcularDistancia(ubicacionUsuario, p.getUbicacion())))
+                    distanceCalculator.calcularDistancia(ubicacionUsuario, p.getUbicacion())))
                 .collect(Collectors.toList());
         }
         

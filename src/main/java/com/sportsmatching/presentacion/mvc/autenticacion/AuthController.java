@@ -21,7 +21,7 @@ public class AuthController {
                 view.mostrarError("Credenciales inválidas");
                 return null;
             }
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             view.mostrarError(e.getMessage());
             return null;
         }

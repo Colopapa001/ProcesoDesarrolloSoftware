@@ -29,7 +29,7 @@ public class RegistroController {
             // Mostrar mensaje de error específico
             view.mostrarError(e.getMessage());
             return false;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             view.mostrarError("Error inesperado: " + e.getMessage());
             return false;
         }

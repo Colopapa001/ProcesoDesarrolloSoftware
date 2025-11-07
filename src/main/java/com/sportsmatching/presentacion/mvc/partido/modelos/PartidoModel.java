@@ -14,8 +14,6 @@ public class PartidoModel {
         this.repository = repository;
         this.service = service;
         this.notificacionService = notificacionService;
-        // Configurar el servicio de notificaciones en el servicio de partido
-        this.service.setNotificacionService(notificacionService);
     }
 
     public Partido crearPartido(com.sportsmatching.dominio.catalogos.Deporte deporte,

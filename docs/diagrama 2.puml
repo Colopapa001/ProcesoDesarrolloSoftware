@@ -51,6 +51,7 @@ package "MVC" {
     RegistroController "1" --> "1" RegistroView : actualiza
     RegistroController "1" --> "1" UsuarioValidacionService : valida
     RegistroModel "1" --> "1" UsuarioValidacionService : valida
+    RegistroModel "1" --> "1" UsuarioRepository : persiste
   }
 
   package "Autenticación" {
@@ -95,6 +96,7 @@ package "MVC" {
     BusquedaController "1" --> "1" BusquedaModel : usa
     BusquedaController "1" --> "1" BusquedaView : actualiza
     BusquedaModel "1" --> "1" BusquedaFiltroService : filtra
+    BusquedaFiltroService "1" --> "1" DistanceCalculator : calcula distancias
   }
 
   package "Partido" {
@@ -133,20 +135,53 @@ package "MVC" {
         + crearPartido(...): Partido
         + obtenerPartido(id: Long): Partido
       }
-      class PartidoRepository {
+      interface PartidoRepository {
         + guardar(p: Partido): Partido
         + buscarPorId(id: Long): Partido
         + buscarTodos(): List<Partido>
         + actualizar(p: Partido): Partido
       }
+      interface UsuarioRepository {
+        + save(u: Usuario): Usuario
+        + findById(id: Long): Usuario
+        + findByUsername(username: String): Usuario
+        + findAll(): Collection<Usuario>
+      }
       class PartidoService {
         + inscribirJugador(p: Partido, u: Usuario): Boolean
         + verificarCompletitud(p: Partido): Boolean
         + puedeInscribirJugador(p: Partido, u: Usuario): Boolean
+        + removerJugador(p: Partido, u: Usuario): Boolean
       }
-      class PartidoNotificacionService {
+      interface PartidoNotificacionService {
         + notificarCambioEstado(p: Partido, e: String)
         + notificarCreacion(p: Partido)
+      }
+      class DefaultPartidoNotificacionService {
+        + notificarCambioEstado(p: Partido, e: String)
+        + notificarCreacion(p: Partido)
+      }
+      interface PartidoRecipientSelector {
+        + seleccionarDestinatarios(p: Partido): List<PartidoDestinatario>
+      }
+      class NearbyInterestedRecipientSelector {
+        + seleccionarDestinatarios(p: Partido): List<PartidoDestinatario>
+      }
+      class PartidoDestinatario {
+        - usuario: Usuario
+        - distanciaKm: double
+        + getters
+      }
+      interface PartidoEmailBuilder {
+        + construirEmailPartidoCercano(p: Partido, u: Usuario, d: double): EmailContent
+      }
+      class HtmlPartidoEmailBuilder {
+        + construirEmailPartidoCercano(p: Partido, u: Usuario, d: double): EmailContent
+      }
+      class EmailContent {
+        - subject: String
+        - body: String
+        + getters
       }
     }
     PartidoCreacionController "1" --> "1" PartidoModel : usa
@@ -158,6 +193,17 @@ package "MVC" {
     PartidoModel "1" --> "1" PartidoRepository : persiste
     PartidoModel "1" --> "1" PartidoService : lógica negocio
     PartidoModel "1" --> "1" PartidoNotificacionService : notifica
+    DefaultPartidoNotificacionService ..|> PartidoNotificacionService
+    DefaultPartidoNotificacionService "1" --> "1" PartidoRecipientSelector : selecciona
+    DefaultPartidoNotificacionService "1" --> "1" PartidoEmailBuilder : construye mensajes
+    DefaultPartidoNotificacionService "1" --> "1" NotificationClient : envía
+    DefaultPartidoNotificacionService "1" --> "1" NotificacionSubject : publica
+    PartidoRecipientSelector <|.. NearbyInterestedRecipientSelector
+    NearbyInterestedRecipientSelector "1" --> "1" UsuarioRepository : consulta
+    NearbyInterestedRecipientSelector "1" --> "1" DistanceCalculator : calcula
+    PartidoDestinatario "1" --> "1" Usuario : objetivo
+    PartidoEmailBuilder <|.. HtmlPartidoEmailBuilder
+    HtmlPartidoEmailBuilder "1" --> "1" EmailContent : produce
   }
 
   package "Catálogos" {
@@ -178,6 +224,18 @@ package "MVC" {
   }
 }
 
+package "Servicios Compartidos" {
+  interface DistanceCalculator {
+    + calcularDistancia(loc1: Location, loc2: Location): double
+  }
+  class DistanciaService {
+    + calcularDistancia(loc1: Location, loc2: Location): double
+  }
+  DistanceCalculator <|.. DistanciaService
+  DistanceCalculator ..> Location : utiliza
+  DistanciaService ..> Location : calcula
+}
+
 package "Dominio" {
   class Usuario {
     - id: Long
@@ -186,6 +244,7 @@ package "Dominio" {
     - password: String
     - nivel: Nivel
     - deporteFavorito: Deporte
+    - ubicacion: Location
     + getters
     + validarPassword(p: String): Boolean
   }
@@ -208,10 +267,9 @@ package "Dominio" {
     - deporte: Deporte
     - organizador: Usuario
     - jugadoresRequeridos: int
-    - jugadores: List<Usuario>
     - estado: PartidoState
-    - ubicacion: String
-    - fechaHora: Date
+    - ubicacion: Location
+    - fechaHora: LocalDateTime
     - duracion: int
     - nivelMin: Nivel
     - nivelMax: Nivel
@@ -232,6 +290,13 @@ package "Dominio" {
     + obtenerCantidadDisponible(): int
   }
 
+  class Location {
+    - latitud: double
+    - longitud: double
+    - descripcion: String
+    + getters
+  }
+
   class PartidoEstadisticas {
     - estadisticas: String
     - comentarios: List<String>
@@ -250,10 +315,12 @@ package "Dominio" {
 
   Usuario "0..*" --> "0..1" Nivel : referencia
   Usuario "0..*" --> "0..1" Deporte : referencia
+  Usuario "0..*" --> "0..1" Location : reside
   Partido "1" --> "1" Deporte : referencia
   Partido "1" --> "1" Usuario : organizador
   Partido "1" --> "1" PartidoJugadores : gestiona
   Partido "1" --> "0..1" PartidoEstadisticas : contiene
+  Partido "1" --> "1" Location : se juega en
   PartidoService "1" --> "1" PartidoJugadores : usa
   PartidoService "1" --> "1" PartidoValidacion : valida
 }

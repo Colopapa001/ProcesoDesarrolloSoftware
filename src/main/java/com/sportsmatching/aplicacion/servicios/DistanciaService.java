@@ -2,7 +2,7 @@ package com.sportsmatching.aplicacion.servicios;
 
 import com.sportsmatching.dominio.Location;
 
-public class DistanciaService {
+public class DistanciaService implements DistanceCalculator {
     // Radio de la Tierra en kilómetros
     private static final double RADIO_TIERRA_KM = 6371.0;
 
@@ -12,6 +12,7 @@ public class DistanciaService {
      * @param loc2 Segunda ubicación
      * @return Distancia en kilómetros
      */
+    @Override
     public double calcularDistancia(Location loc1, Location loc2) {
         double lat1 = Math.toRadians(loc1.getLatitud());
         double lon1 = Math.toRadians(loc1.getLongitud());
