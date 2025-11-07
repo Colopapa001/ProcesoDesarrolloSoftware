@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 public class InteractiveMenu {
     private final Scanner scanner = new Scanner(System.in);
@@ -166,9 +167,23 @@ public class InteractiveMenu {
             String username = scanner.nextLine().trim();
             if (username.isEmpty()) username = "emma";
             
-            System.out.print("Email [default: emma.maidana@gmail.com]: ");
-            String email = scanner.nextLine().trim();
-            if (email.isEmpty()) email = "emma.maidana@gmail.com";
+            
+            // Validación de email
+            Pattern emailPattern = Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+            String email;
+            while (true) {
+                System.out.print("Email [default: emma.maidana@gmail.com]: ");
+                email = scanner.nextLine().trim();
+                if (email.isEmpty()) {
+                    email = "emma.maidana@gmail.com";
+                    break;
+                }
+                if (emailPattern.matcher(email).matches()) {
+                    break;
+                } else {
+                    System.out.println("Email inválido. Ingrese un email con formato válido (ej: usuario@dominio.com).");
+                }
+            }
             
             System.out.print("Password [default: emma]: ");
             String password = scanner.nextLine().trim();
