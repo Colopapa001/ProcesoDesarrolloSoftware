@@ -1,0 +1,521 @@
+@startuml
+!theme plain
+scale 0.65
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam defaultFontSize 7
+skinparam classFontSize 7
+skinparam classFontStyle bold
+skinparam roundcorner 2
+skinparam shadowing false
+skinparam linetype ortho
+skinparam maxMessageSize 40
+skinparam wrapWidth 100
+skinparam monochrome false
+skinparam nodePadding 2
+skinparam packagePadding 2
+skinparam arrowThickness 1
+skinparam classBorderThickness 1
+skinparam minClassWidth 0
+skinparam maxClassWidth 0
+skinparam nodesep 0.2
+skinparam ranksep 0.2
+skinparam horizontalPadding 5
+skinparam verticalPadding 5
+
+' Configuración para mejor visualización en pantalla
+skinparam dpi 300
+skinparam arrowColor #000000
+skinparam backgroundColor #FFFFFF
+
+title Sistema de Gestión de Encuentros Deportivos\n(MVC + State, Strategy, Observer, Adapter, Facade, Composite, Decorator)\nPágina 1: MVC y Dominio
+
+package "MVC" {
+  package "Registro" {
+    class RegistroController {
+      + registrarUsuario(...): Boolean
+    }
+    class RegistroView {
+      + mostrarFormulario()
+      + mostrarError(mensaje: String)
+      + mostrarExito()
+    }
+    class RegistroModel {
+      + crearUsuario(...): Usuario
+    }
+    class UsuarioValidacionService {
+      + validarUnicidad(email: String, username: String): Boolean
+      + validarDatos(...): Boolean
+    }
+    RegistroController "1" --> "1" RegistroModel : usa
+    RegistroController "1" --> "1" RegistroView : actualiza
+    RegistroController "1" --> "1" UsuarioValidacionService : valida
+    RegistroModel "1" --> "1" UsuarioValidacionService : valida
+  }
+
+  package "Autenticación" {
+    class AuthController {
+      + login(username: String, password: String): Usuario
+      + logout()
+      + obtenerUsuarioActual(): Usuario
+    }
+    class AuthView {
+      + mostrarLogin()
+      + mostrarError(mensaje: String)
+    }
+    class AuthModel {
+      - usuarioActual: Usuario
+      + autenticar(username: String, password: String): Usuario
+    }
+    class AutenticacionService {
+      + verificarCredenciales(username: String, password: String): Boolean
+      + generarToken(usuario: Usuario): String
+    }
+    AuthController "1" --> "1" AuthModel : usa
+    AuthController "1" --> "1" AuthView : actualiza
+    AuthModel "1" --> "1" AutenticacionService : verifica
+  }
+
+  package "Búsqueda" {
+    class BusquedaController {
+      + buscarPartidos(...): List<Partido>
+    }
+    class BusquedaView {
+      + mostrarResultados(p: List<Partido>)
+      + mostrarFormularioBusqueda()
+      + mostrarDetallePartido(p: Partido)
+    }
+    class BusquedaModel {
+      + buscarPartidos(c: Map<String, Object>): List<Partido>
+    }
+    class BusquedaFiltroService {
+      + filtrarPorDisponibilidad(p: List<Partido>): List<Partido>
+      + aplicarFiltros(p: List<Partido>, f: Map<String, Object>): List<Partido>
+    }
+    BusquedaController "1" --> "1" BusquedaModel : usa
+    BusquedaController "1" --> "1" BusquedaView : actualiza
+    BusquedaModel "1" --> "1" BusquedaFiltroService : filtra
+  }
+
+  package "Partido" {
+    package "Controladores" {
+      class PartidoCreacionController {
+        + crearPartido(...): Partido
+      }
+      class PartidoGestionController {
+        + inscribirJugador(p: Partido, u: Usuario): Boolean
+        + cancelarPartido(p: Partido): Boolean
+        + confirmarPartido(p: Partido): Boolean
+      }
+      class PartidoEstadisticasController {
+        + registrarEstadisticas(p: Partido, s: String): Boolean
+        + agregarComentario(p: Partido, c: String): Boolean
+      }
+    }
+    package "Vistas" {
+      class PartidoListView {
+        + mostrarLista(p: List<Partido>)
+      }
+      class PartidoDetailView {
+        + mostrarPartido(p: Partido)
+        + actualizarEstado(e: String)
+        + actualizarCupos(disp: int, req: int)
+      }
+      class PartidoFormView {
+        + mostrarFormularioCreacion()
+        + mostrarEstadisticas(s: String)
+        + mostrarComentarios(c: List<String>)
+      }
+    }
+    package "Modelos y Servicios" {
+      class PartidoModel {
+        - partidoActual: Partido
+        + crearPartido(...): Partido
+        + obtenerPartido(id: Long): Partido
+      }
+      class PartidoRepository {
+        + guardar(p: Partido): Partido
+        + buscarPorId(id: Long): Partido
+        + buscarTodos(): List<Partido>
+        + actualizar(p: Partido): Partido
+      }
+      class PartidoService {
+        + inscribirJugador(p: Partido, u: Usuario): Boolean
+        + verificarCompletitud(p: Partido): Boolean
+        + puedeInscribirJugador(p: Partido, u: Usuario): Boolean
+      }
+      class PartidoNotificacionService {
+        + notificarCambioEstado(p: Partido, e: String)
+        + notificarCreacion(p: Partido)
+      }
+    }
+    PartidoCreacionController "1" --> "1" PartidoModel : usa
+    PartidoGestionController "1" --> "1" PartidoModel : usa
+    PartidoEstadisticasController "1" --> "1" PartidoModel : usa
+    PartidoCreacionController "1" --> "1" PartidoListView : actualiza
+    PartidoGestionController "1" --> "1" PartidoDetailView : actualiza
+    PartidoEstadisticasController "1" --> "1" PartidoFormView : actualiza
+    PartidoModel "1" --> "1" PartidoRepository : persiste
+    PartidoModel "1" --> "1" PartidoService : lógica negocio
+    PartidoModel "1" --> "1" PartidoNotificacionService : notifica
+  }
+
+  package "Catálogos" {
+    class CatalogoController {
+      + obtenerDeportes(): List<Deporte>
+      + obtenerNiveles(): List<Nivel>
+    }
+    class CatalogoView {
+      + mostrarDeportes(deportes: List<Deporte>)
+      + mostrarNiveles(niveles: List<Nivel>)
+    }
+    class CatalogoModel {
+      + obtenerDeportes(): List<Deporte>
+      + obtenerNiveles(): List<Nivel>
+    }
+    CatalogoController "1" --> "1" CatalogoModel : usa
+    CatalogoController "1" --> "1" CatalogoView : actualiza
+  }
+}
+
+package "Dominio" {
+  class Usuario {
+    - id: Long
+    - username: String
+    - email: String
+    - password: String
+    - nivel: Nivel
+    - deporteFavorito: Deporte
+    + getters
+    + validarPassword(p: String): Boolean
+  }
+
+  package "Catálogos (desde BD)" {
+    class Nivel {
+      - id: Long
+      - nombre: String
+      + getters
+    }
+    class Deporte {
+      - id: Long
+      - nombre: String
+      + getters
+    }
+  }
+
+  class Partido {
+    - id: Long
+    - deporte: Deporte
+    - organizador: Usuario
+    - jugadoresRequeridos: int
+    - jugadores: List<Usuario>
+    - estado: PartidoState
+    - ubicacion: String
+    - fechaHora: Date
+    - duracion: int
+    - nivelMin: Nivel
+    - nivelMax: Nivel
+    - fechaCreacion: Date
+    + getters
+    + setEstado(s: PartidoState)
+    + cancelar()
+    + confirmar()
+  }
+
+  class PartidoJugadores {
+    - jugadores: List<Usuario>
+    - jugadoresRequeridos: int
+    + agregarJugador(u: Usuario): Boolean
+    + removerJugador(u: Usuario): Boolean
+    + verificarCompletitud(): Boolean
+    + puedeAgregarJugador(u: Usuario): Boolean
+    + obtenerCantidadDisponible(): int
+  }
+
+  class PartidoEstadisticas {
+    - estadisticas: String
+    - comentarios: List<String>
+    + registrarEstadisticas(s: String)
+    + agregarComentario(c: String)
+    + obtenerEstadisticas(): String
+    + obtenerComentarios(): List<String>
+  }
+
+  class PartidoValidacion {
+    + verificarHorarioComienzo(p: Partido): Boolean
+    + verificarHorarioFinalizacion(p: Partido): Boolean
+    + validarNivelJugador(p: Partido, u: Usuario): Boolean
+    + validarCapacidad(p: Partido): Boolean
+  }
+
+  Usuario "0..*" --> "0..1" Nivel : referencia
+  Usuario "0..*" --> "0..1" Deporte : referencia
+  Partido "1" --> "1" Deporte : referencia
+  Partido "1" --> "1" Usuario : organizador
+  Partido "1" --> "1" PartidoJugadores : gestiona
+  Partido "1" --> "0..1" PartidoEstadisticas : contiene
+  PartidoService "1" --> "1" PartidoJugadores : usa
+  PartidoService "1" --> "1" PartidoValidacion : valida
+}
+
+note right of PartidoJugadores
+  Separación de responsabilidades:
+  PartidoJugadores gestiona solo
+  la lógica de jugadores
+end note
+
+note right of PartidoEstadisticas
+  Separación de responsabilidades:
+  PartidoEstadisticas gestiona solo
+  estadísticas y comentarios
+end note
+
+PartidoModel "1" --> "0..*" Partido : gestiona
+BusquedaModel "1" --> "0..*" Partido : busca
+RegistroModel "1" --> "0..1" Usuario : crea
+AuthModel "1" --> "0..1" Usuario : autentica
+CatalogoModel "1" --> "0..*" Deporte : obtiene
+CatalogoModel "1" --> "0..*" Nivel : obtiene
+
+newpage
+
+title Sistema de Gestión de Encuentros Deportivos\n(MVC + State, Strategy, Observer, Adapter, Facade, Composite, Decorator)\nPágina 2: State y Strategy
+
+package "State (Estados de Partido)" {
+  interface PartidoState {
+    + onJugadorAgregado(p: Partido)
+    + onJugadorRemovido(p: Partido)
+    + onTiempoComienzo(p: Partido)
+    + onTiempoFinalizacion(p: Partido)
+    + confirmar(p: Partido)
+    + cancelar(p: Partido)
+    + puedeAgregarJugador(p: Partido): Boolean
+    + puedeConfirmar(p: Partido): Boolean
+    + puedeCancelar(p: Partido): Boolean
+    + getNombreEstado(): String
+  }
+
+  class NecesitamosJugadores {
+    + onJugadorAgregado(p: Partido)
+    + puedeAgregarJugador(p: Partido): Boolean
+    + getNombreEstado(): String
+  }
+  class PartidoArmado {
+    + confirmar(p: Partido)
+    + puedeConfirmar(p: Partido): Boolean
+    + getNombreEstado(): String
+  }
+  class Confirmado {
+    + onTiempoComienzo(p: Partido)
+    + cancelar(p: Partido)
+    + puedeCancelar(p: Partido): Boolean
+    + getNombreEstado(): String
+  }
+  class EnJuego {
+    + onTiempoFinalizacion(p: Partido)
+    + puedeAgregarJugador(p: Partido): Boolean
+    + getNombreEstado(): String
+  }
+  class Finalizado {
+    + puedeAgregarJugador(p: Partido): Boolean
+    + puedeConfirmar(p: Partido): Boolean
+    + puedeCancelar(p: Partido): Boolean
+    + getNombreEstado(): String
+  }
+  class Cancelado {
+    + puedeAgregarJugador(p: Partido): Boolean
+    + puedeConfirmar(p: Partido): Boolean
+    + puedeCancelar(p: Partido): Boolean
+    + getNombreEstado(): String
+  }
+
+  Partido "1" --> "1" PartidoState
+  PartidoState <|.. NecesitamosJugadores
+  PartidoState <|.. PartidoArmado
+  PartidoState <|.. Confirmado
+  PartidoState <|.. EnJuego
+  PartidoState <|.. Finalizado
+  PartidoState <|.. Cancelado
+}
+
+package "Strategy (Emparejamiento)" {
+  interface EmparejamientoStrategy {
+    + emparejar(c: List<Usuario>, p: Partido): List<Usuario>
+  }
+  class EmparejamientoPorNivel {
+    + emparejar(c: List<Usuario>, p: Partido): List<Usuario>
+  }
+  class EmparejamientoPorCercania {
+    + emparejar(c: List<Usuario>, p: Partido): List<Usuario>
+  }
+  class EmparejamientoPorHistorial {
+    + emparejar(c: List<Usuario>, p: Partido): List<Usuario>
+  }
+
+  EmparejamientoStrategy <|.. EmparejamientoPorNivel
+  EmparejamientoStrategy <|.. EmparejamientoPorCercania
+  EmparejamientoStrategy <|.. EmparejamientoPorHistorial
+
+  class MatchmakingService {
+    - strategy: EmparejamientoStrategy
+    + setStrategy(s: EmparejamientoStrategy)
+    + sugerir(p: Partido): List<Usuario>
+    + filtrarPorNivel(c: List<Usuario>, p: Partido): List<Usuario>
+  }
+
+  MatchmakingService "1" --> "1" EmparejamientoStrategy
+}
+
+PartidoService "1" --> "1" MatchmakingService : consulta sugerencias
+
+newpage
+
+title Sistema de Gestión de Encuentros Deportivos\n(MVC + State, Strategy, Observer, Adapter, Facade, Composite, Decorator)\nPágina 3: Observer, Adapter y Composite
+
+package "Observer + Adapter (Notificaciones)" {
+  interface Observer {
+    + update(e: String, p: Partido)
+  }
+
+  class NotificacionSubject {
+    - observers: List<Observer>
+    + attach(o: Observer)
+    + detach(o: Observer)
+    + notify(e: String, p: Partido)
+  }
+
+  interface NotificationClient {
+    + send(dest: String, asunto: String, cuerpo: String)
+  }
+
+  class JavaMailAdapter implements NotificationClient {
+    + send(dest: String, asunto: String, cuerpo: String)
+  }
+  class FirebasePushAdapter implements NotificationClient {
+    + send(dest: String, asunto: String, cuerpo: String)
+  }
+
+  class EmailObserver implements Observer {
+    - client: NotificationClient
+    + update(e: String, p: Partido)
+    + construirMensaje(e: String, p: Partido): String
+  }
+  class PushObserver implements Observer {
+    - client: NotificationClient
+    + update(e: String, p: Partido)
+    + construirMensaje(e: String, p: Partido): String
+  }
+
+  EmailObserver "1" --> "1" NotificationClient
+  PushObserver "1" --> "1" NotificationClient
+  NotificacionSubject "1" --> "0..*" Observer : notifica
+}
+
+package "Composite (Notificaciones Compuestas)" {
+  abstract class ComponenteNotificacion {
+    + enviar(e: String, p: Partido)
+    + agregar(c: ComponenteNotificacion)
+    + remover(c: ComponenteNotificacion)
+    + obtenerHijos(): List<ComponenteNotificacion>
+  }
+
+  class NotificacionSimple extends ComponenteNotificacion {
+    - observer: Observer
+    + enviar(e: String, p: Partido)
+  }
+
+  class NotificacionCompuesta extends ComponenteNotificacion {
+    - componentes: List<ComponenteNotificacion>
+    + enviar(e: String, p: Partido)
+    + agregar(c: ComponenteNotificacion)
+    + remover(c: ComponenteNotificacion)
+    + obtenerHijos(): List<ComponenteNotificacion>
+  }
+
+  NotificacionCompuesta "1" --> "0..*" ComponenteNotificacion : contiene
+  NotificacionSimple "1" --> "1" Observer : usa
+}
+
+NotificacionSubject <|-- Partido : subject
+PartidoNotificacionService "1" --> "1" NotificacionSubject : emite eventos
+PartidoGestionController "1" --> "1" NotificacionSubject : alta de observers
+
+newpage
+
+title Sistema de Gestión de Encuentros Deportivos\n(MVC + State, Strategy, Observer, Adapter, Facade, Composite, Decorator)\nPágina 4: Facade y Decorator
+
+package "Facade (Simplificación de Operaciones)" {
+  class PartidoServiceFacade {
+    - partidoRepository: PartidoRepository
+    - partidoService: PartidoService
+    - matchmakingService: MatchmakingService
+    - notificacionService: PartidoNotificacionService
+    - busquedaModel: BusquedaModel
+    + crearPartidoCompleto(...): Partido
+    + inscribirJugadorYNotificar(p: Partido, u: Usuario): Boolean
+    + buscarYSugerirJugadores(p: Partido): List<Usuario>
+    + finalizarPartidoCompleto(p: Partido): Boolean
+  }
+
+  PartidoServiceFacade "1" --> "1" PartidoRepository : usa
+  PartidoServiceFacade "1" --> "1" PartidoService : usa
+  PartidoServiceFacade "1" --> "1" MatchmakingService : usa
+  PartidoServiceFacade "1" --> "1" PartidoNotificacionService : usa
+  PartidoServiceFacade "1" --> "1" BusquedaModel : usa
+}
+
+package "Decorator (Notificaciones con Funcionalidad Extendida)" {
+  interface INotificacionService {
+    + enviar(dest: String, asunto: String, cuerpo: String)
+  }
+
+  class NotificacionServiceBase implements INotificacionService {
+    - client: NotificationClient
+    + enviar(dest: String, asunto: String, cuerpo: String)
+  }
+
+  abstract class NotificacionServiceDecorator implements INotificacionService {
+    # servicio: INotificacionService
+    + enviar(dest: String, asunto: String, cuerpo: String)
+  }
+
+  class NotificacionServiceConRetry extends NotificacionServiceDecorator {
+    - maxIntentos: int
+    + enviar(dest: String, asunto: String, cuerpo: String)
+    + reintentar(dest: String, asunto: String, cuerpo: String): Boolean
+  }
+
+  class NotificacionServiceConLogging extends NotificacionServiceDecorator {
+    - logger: Logger
+    + enviar(dest: String, asunto: String, cuerpo: String)
+    + registrarEnvio(dest: String, exito: Boolean)
+  }
+
+  class NotificacionServiceConPrioridad extends NotificacionServiceDecorator {
+    - colaPrioridad: Queue<Notificacion>
+    + enviar(dest: String, asunto: String, cuerpo: String)
+    + agregarPrioridad(notif: Notificacion, prioridad: int)
+  }
+
+  NotificacionServiceDecorator "1" --> "1" INotificacionService : decora
+  NotificacionServiceBase "1" --> "1" NotificationClient : usa
+}
+
+EmailObserver "1" --> "0..1" INotificacionService : usa (opcional)
+PushObserver "1" --> "0..1" INotificacionService : usa (opcional)
+PartidoGestionController "1" --> "0..1" PartidoServiceFacade : usa (opcional)
+
+note right of PartidoServiceFacade
+  Facade simplifica operaciones
+  complejas que involucran múltiples
+  servicios del sistema
+end note
+
+note right of NotificacionServiceDecorator
+  Decorator permite agregar
+  funcionalidad (retry, logging,
+  prioridad) a las notificaciones
+  de forma dinámica
+end note
+
+@enduml
