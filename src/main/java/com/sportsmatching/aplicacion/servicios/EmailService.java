@@ -63,11 +63,17 @@ public class EmailService {
             }
         });
         
-        Message message = new MimeMessage(session);
+        MimeMessage message = new MimeMessage(session);
         message.setFrom(new InternetAddress(username));
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(destino));
         message.setSubject(asunto);
-        message.setText(cuerpo);
+        
+        // Detectar si el cuerpo es HTML y configurar el contenido apropiadamente
+        if (cuerpo.trim().startsWith("<!DOCTYPE html>") || cuerpo.trim().startsWith("<html>")) {
+            message.setContent(cuerpo, "text/html; charset=utf-8");
+        } else {
+            message.setText(cuerpo);
+        }
         
         Transport.send(message);
     }
@@ -82,7 +88,8 @@ public class EmailService {
             
             // Generar nombre de archivo único
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-            String filename = EMAIL_DIR + "email_" + timestamp + ".txt";
+            String extension = (cuerpo.trim().startsWith("<!DOCTYPE html>") || cuerpo.trim().startsWith("<html>")) ? ".html" : ".txt";
+            String filename = EMAIL_DIR + "email_" + timestamp + extension;
             
             // Escribir email a archivo
             try (FileWriter writer = new FileWriter(filename)) {

@@ -8,6 +8,7 @@ import com.sportsmatching.dominio.catalogos.Nivel;
 import com.sportsmatching.aplicacion.servicios.DistanciaService;
 import com.sportsmatching.presentacion.mvc.autenticacion.AuthController;
 import com.sportsmatching.presentacion.mvc.autenticacion.AuthView;
+import com.sportsmatching.presentacion.mvc.autenticacion.servicios.AutenticacionService;
 import com.sportsmatching.presentacion.mvc.busqueda.BusquedaController;
 import com.sportsmatching.presentacion.mvc.busqueda.BusquedaView;
 import com.sportsmatching.presentacion.mvc.catalogos.CatalogoController;
@@ -15,6 +16,7 @@ import com.sportsmatching.presentacion.mvc.catalogos.CatalogoView;
 import com.sportsmatching.presentacion.mvc.partido.controladores.PartidoCreacionController;
 import com.sportsmatching.presentacion.mvc.partido.controladores.PartidoEstadisticasController;
 import com.sportsmatching.presentacion.mvc.partido.controladores.PartidoGestionController;
+import com.sportsmatching.presentacion.mvc.partido.modelos.PartidoModel;
 import com.sportsmatching.presentacion.mvc.partido.vistas.PartidoDetailView;
 import com.sportsmatching.presentacion.mvc.partido.vistas.PartidoFormView;
 import com.sportsmatching.presentacion.mvc.partido.vistas.PartidoListView;
@@ -49,6 +51,7 @@ public class InteractiveMenu {
     private final PartidoListView partidoListView;
     private final PartidoDetailView partidoDetailView;
     private final PartidoFormView partidoFormView;
+    private final PartidoModel partidoModel;
     private final DistanciaService distanciaService;
 
     public InteractiveMenu(RegistroController registroController, RegistroView registroView,
@@ -60,7 +63,8 @@ public class InteractiveMenu {
                           PartidoEstadisticasController partidoEstadisticasController,
                           PartidoListView partidoListView,
                           PartidoDetailView partidoDetailView,
-                          PartidoFormView partidoFormView) {
+                          PartidoFormView partidoFormView,
+                          PartidoModel partidoModel) {
         this.registroController = registroController;
         this.registroView = registroView;
         this.authController = authController;
@@ -75,13 +79,14 @@ public class InteractiveMenu {
         this.partidoListView = partidoListView;
         this.partidoDetailView = partidoDetailView;
         this.partidoFormView = partidoFormView;
+        this.partidoModel = partidoModel;
         this.distanciaService = new DistanciaService();
     }
 
     public void run() {
         System.out.println("╔════════════════════════════════════════╗");
-        System.out.println("║  Sistema de Gestión de Partidos       ║");
-        System.out.println("║  Deportivos                           ║");
+        System.out.println("║  Sistema de Gestión de Partidos        ║");
+        System.out.println("║  Deportivos                            ║");
         System.out.println("╚════════════════════════════════════════╝\n");
 
         // Mostrar resumen de datos mock cargados (opcional)
@@ -344,6 +349,7 @@ public class InteractiveMenu {
         }
 
         List<Partido> resultados = busquedaController.buscarPartidos(criterios);
+        boolean usandoMockData = false;
 
         // Si controller no devuelve resultados, usar fallback al MockDomainDataStore (datos mock cargados)
         if (resultados == null || resultados.isEmpty()) {
@@ -352,6 +358,7 @@ public class InteractiveMenu {
                 var mockResultados = MockDomainDataStore.searchPartidos(ubicDesc, filtrarDisponibilidad, nivelUsuarioStr, deportePrefStr);
 
                 if (mockResultados != null && !mockResultados.isEmpty()) {
+                    usandoMockData = true;
                     System.out.println("\n=== Resultados (desde datos mock) ===");
                     java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
                     for (var p : mockResultados) {
@@ -361,45 +368,133 @@ public class InteractiveMenu {
                                 " | Deporte: " + p.deporte +
                                 " | Ubicación: " + (p.ubicacion != null ? p.ubicacion.descripcion : "n/d") +
                                 " | Fecha: " + (p.fechaHora != null ? p.fechaHora.format(fmt) : "n/d") +
-                                " | Cupos: " + inscritos + "/" + p.jugadoresRequeridos +
+                                " | Cupos: " + (p.jugadoresRequeridos - inscritos) + "/" + p.jugadoresRequeridos +
                                 " | Nivel: " + p.nivelMin + "-" + p.nivelMax +
                                 " | Organizador: " + p.organizadorUsername);
                     }
+                    // Continuar para ofrecer opciones
+                } else {
+                    System.out.println("No se encontraron partidos que coincidan con los criterios de búsqueda.");
                     return;
                 }
             } catch (NoClassDefFoundError | Exception ignored) {
                 // Si no existe MockDomainDataStore o falla, continuar
             }
 
-            System.out.println("No se encontraron partidos que coincidan con los criterios de búsqueda.");
-            return;
+            if (!usandoMockData) {
+                System.out.println("No se encontraron partidos que coincidan con los criterios de búsqueda.");
+                return;
+            }
         }
 
         // Si el controlador devolvió resultados, mostrarlos normalmente
-        System.out.println("\n=== Partidos encontrados ===");
-        for (Partido p : resultados) {
-            double distancia = distanciaService.calcularDistancia(ubicacionUsuario, p.getUbicacion());
-            System.out.println("ID: " + p.getId() +
-                    " | Deporte: " + p.getDeporte().getNombre() +
-                    " | Ubicación: " + p.getUbicacion().getDescripcion() +
-                    " | Distancia: " + String.format("%.2f", distancia) + " km" +
-                    " | Estado: " + p.getEstado().getNombreEstado() +
-                    " | Cupos: " + p.getPartidoJugadores().obtenerCantidadDisponible() + "/" + p.getJugadoresRequeridos());
+        if (!usandoMockData && resultados != null && !resultados.isEmpty()) {
+            System.out.println("\n=== Partidos encontrados ===");
+            for (Partido p : resultados) {
+                double distancia = distanciaService.calcularDistancia(ubicacionUsuario, p.getUbicacion());
+                System.out.println("ID: " + p.getId() +
+                        " | Deporte: " + p.getDeporte().getNombre() +
+                        " | Ubicación: " + p.getUbicacion().getDescripcion() +
+                        " | Distancia: " + String.format("%.2f", distancia) + " km" +
+                        " | Estado: " + p.getEstado().getNombreEstado() +
+                        " | Cupos: " + p.getPartidoJugadores().obtenerCantidadDisponible() + "/" + p.getJugadoresRequeridos());
+            }
         }
 
-        System.out.println("\n¿Ver detalle de algún partido? (s/n): ");
-        String verDetalle = scanner.nextLine();
-        if (verDetalle.equalsIgnoreCase("s")) {
+        // Opciones para interactuar con los partidos
+        System.out.println("\nOpciones:");
+        System.out.println("1. Ver detalle de un partido");
+        if (usuarioActual != null) {
+            System.out.println("2. Unirse a un partido");
+        }
+        System.out.print("Seleccione opción (1" + (usuarioActual != null ? "/2" : "") + " o Enter para salir): ");
+        String opcion = scanner.nextLine().trim();
+        
+        if (opcion.isEmpty()) {
+            return;
+        }
+
+        if (opcion.equals("1")) {
             System.out.print("Ingrese ID del partido: ");
-            Long id = scanner.nextLong();
-            scanner.nextLine();
-            resultados.stream()
-                .filter(p -> p.getId().equals(id))
-                .findFirst()
-                .ifPresentOrElse(
-                    busquedaView::mostrarDetallePartido,
-                    () -> System.out.println("Partido no encontrado")
-                );
+            try {
+                Long id = Long.parseLong(scanner.nextLine().trim());
+                if (!usandoMockData && resultados != null) {
+                    resultados.stream()
+                        .filter(p -> p.getId().equals(id))
+                        .findFirst()
+                        .ifPresentOrElse(
+                            busquedaView::mostrarDetallePartido,
+                            () -> System.out.println("Partido no encontrado")
+                        );
+                } else {
+                    // Para mock data, intentar obtener del repositorio
+                    Partido partido = partidoModel.obtenerPartido(id);
+                    if (partido != null) {
+                        busquedaView.mostrarDetallePartido(partido);
+                    } else {
+                        System.out.println("Partido no encontrado");
+                    }
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("ID inválido");
+            }
+        } else if (opcion.equals("2") && usuarioActual != null) {
+            System.out.print("Ingrese ID del partido al que desea unirse: ");
+            try {
+                Long id = Long.parseLong(scanner.nextLine().trim());
+                
+                // Obtener el partido real del repositorio (funciona tanto para resultados reales como mock)
+                Partido partidoSeleccionado = null;
+                
+                if (!usandoMockData && resultados != null) {
+                    // Si tenemos resultados reales, buscarlo en la lista
+                    partidoSeleccionado = resultados.stream()
+                        .filter(p -> p.getId().equals(id))
+                        .findFirst()
+                        .orElse(null);
+                }
+                
+                // Si no lo encontramos en los resultados, intentar obtenerlo del repositorio
+                if (partidoSeleccionado == null) {
+                    partidoSeleccionado = partidoModel.obtenerPartido(id);
+                }
+                
+                if (partidoSeleccionado == null) {
+                    System.out.println("❌ Partido no encontrado");
+                    return;
+                }
+
+                // Verificar si el usuario ya está en el partido
+                if (partidoSeleccionado.getPartidoJugadores().getJugadores().stream()
+                    .anyMatch(u -> u.getId().equals(usuarioActual.getId()))) {
+                    System.out.println("⚠ Ya estás inscrito en este partido");
+                    return;
+                }
+
+                // Intentar unirse al partido
+                boolean exito = partidoGestionController.inscribirJugador(partidoSeleccionado, usuarioActual);
+                if (exito) {
+                    System.out.println("✓ Te has unido exitosamente al partido ID: " + partidoSeleccionado.getId());
+                    System.out.println("Cupos disponibles: " + partidoSeleccionado.getPartidoJugadores().obtenerCantidadDisponible() + 
+                                     "/" + partidoSeleccionado.getJugadoresRequeridos());
+                    
+                    // Verificar si el partido está completo
+                    if (partidoSeleccionado.getPartidoJugadores().verificarCompletitud()) {
+                        System.out.println("🎉 ¡El partido está completo! Todos los jugadores están listos.");
+                    }
+                } else {
+                    System.out.println("❌ No se pudo unir al partido. Verifica que:");
+                    System.out.println("   - El partido tenga cupos disponibles");
+                    System.out.println("   - Tu nivel esté dentro del rango permitido");
+                    System.out.println("   - El partido esté en un estado que permita inscripciones");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("ID inválido");
+            } catch (Exception e) {
+                System.out.println("❌ Error al unirse al partido: " + e.getMessage());
+            }
+        } else if (opcion.equals("2") && usuarioActual == null) {
+            System.out.println("❌ Debes iniciar sesión para unirte a un partido");
         }
     }
 
@@ -506,37 +601,249 @@ public class InteractiveMenu {
     }
 
     private void gestionarPartido() {
-        System.out.print("Ingrese ID del partido: ");
-        Long id = scanner.nextLong();
-        scanner.nextLine();
-        
-        // Aquí necesitaríamos obtener el partido del repositorio
-        // Por ahora mostramos un mensaje
-        System.out.println("Funcionalidad de gestión de partido");
-        System.out.println("1. Inscribir jugador");
-        System.out.println("2. Confirmar partido");
-        System.out.println("3. Cancelar partido");
-        System.out.print("Seleccione: ");
-        int opcion = scanner.nextInt();
-        scanner.nextLine();
-        
-        // La implementación completa requeriría obtener el partido del repositorio
-        System.out.println("(Funcionalidad pendiente de implementación completa)");
+        if (usuarioActual == null) {
+            System.out.println("❌ Debes iniciar sesión para gestionar partidos");
+            return;
+        }
+
+        try {
+            System.out.print("Ingrese ID del partido: ");
+            String idInput = scanner.nextLine().trim();
+            if (idInput.isEmpty()) {
+                System.out.println("ID inválido");
+                return;
+            }
+            Long id = Long.parseLong(idInput);
+            
+            Partido partido = partidoModel.obtenerPartido(id);
+            if (partido == null) {
+                System.out.println("❌ Partido no encontrado");
+                return;
+            }
+
+            // Verificar que el usuario sea el organizador
+            if (!partido.getOrganizador().getId().equals(usuarioActual.getId())) {
+                System.out.println("❌ Solo el organizador del partido puede gestionarlo");
+                return;
+            }
+
+            // Mostrar información del partido
+            System.out.println("\n=== Gestión de Partido ===");
+            System.out.println("ID: " + partido.getId());
+            System.out.println("Deporte: " + partido.getDeporte().getNombre());
+            System.out.println("Estado: " + partido.getEstado().getNombreEstado());
+            System.out.println("Jugadores: " + partido.getPartidoJugadores().getJugadores().size() + 
+                             "/" + partido.getJugadoresRequeridos());
+            System.out.println("Ubicación: " + partido.getUbicacion().getDescripcion());
+            System.out.println("Fecha: " + partido.getFechaHora());
+            
+            // Mostrar lista de jugadores inscritos
+            System.out.println("\nJugadores inscritos:");
+            List<Usuario> jugadores = partido.getPartidoJugadores().getJugadores();
+            if (jugadores.isEmpty()) {
+                System.out.println("  (No hay jugadores inscritos)");
+            } else {
+                for (int i = 0; i < jugadores.size(); i++) {
+                    Usuario j = jugadores.get(i);
+                    System.out.println("  " + (i + 1) + ". " + j.getUsername() + 
+                                     " (" + (j.getNivel() != null ? j.getNivel().getNombre() : "N/A") + ")");
+                }
+            }
+
+            // Opciones de gestión
+            System.out.println("\nOpciones:");
+            System.out.println("1. Ver detalle completo");
+            System.out.println("2. Inscribir jugador");
+            System.out.println("3. Remover jugador");
+            System.out.println("4. Confirmar partido");
+            System.out.println("5. Cancelar partido");
+            System.out.println("0. Volver");
+            System.out.print("Seleccione opción: ");
+            
+            String opcion = scanner.nextLine().trim();
+            
+            switch (opcion) {
+                case "1" -> {
+                    busquedaView.mostrarDetallePartido(partido);
+                }
+                case "2" -> {
+                    System.out.print("Ingrese username del jugador a inscribir: ");
+                    String username = scanner.nextLine().trim();
+                    Usuario jugador = authController.obtenerUsuario(username);
+                    if (jugador == null) {
+                        System.out.println("❌ Usuario no encontrado");
+                    } else {
+                        boolean exito = partidoGestionController.inscribirJugador(partido, jugador);
+                        if (exito) {
+                            System.out.println("✓ Jugador " + username + " inscrito exitosamente");
+                            System.out.println("Cupos disponibles: " + 
+                                             partido.getPartidoJugadores().obtenerCantidadDisponible() + 
+                                             "/" + partido.getJugadoresRequeridos());
+                        } else {
+                            System.out.println("❌ No se pudo inscribir al jugador. Verifica que:");
+                            System.out.println("   - El partido tenga cupos disponibles");
+                            System.out.println("   - El nivel del jugador esté dentro del rango permitido");
+                            System.out.println("   - El jugador no esté ya inscrito");
+                            System.out.println("   - El partido esté en un estado que permita inscripciones");
+                        }
+                    }
+                }
+                case "3" -> {
+                    if (jugadores.isEmpty()) {
+                        System.out.println("⚠ No hay jugadores para remover");
+                    } else {
+                        System.out.print("Ingrese username del jugador a remover: ");
+                        String username = scanner.nextLine().trim();
+                        Usuario jugador = jugadores.stream()
+                            .filter(j -> j.getUsername().equalsIgnoreCase(username))
+                            .findFirst()
+                            .orElse(null);
+                        if (jugador == null) {
+                            System.out.println("❌ Jugador no encontrado en este partido");
+                        } else {
+                            boolean exito = partidoGestionController.removerJugador(partido, jugador);
+                            if (exito) {
+                                System.out.println("✓ Jugador " + username + " removido exitosamente");
+                                System.out.println("Cupos disponibles: " + 
+                                                 partido.getPartidoJugadores().obtenerCantidadDisponible() + 
+                                                 "/" + partido.getJugadoresRequeridos());
+                            } else {
+                                System.out.println("❌ No se pudo remover al jugador");
+                            }
+                        }
+                    }
+                }
+                case "4" -> {
+                    boolean exito = partidoGestionController.confirmarPartido(partido);
+                    if (exito) {
+                        System.out.println("✓ Partido confirmado exitosamente");
+                        System.out.println("Estado actual: " + partido.getEstado().getNombreEstado());
+                    } else {
+                        System.out.println("❌ No se pudo confirmar el partido");
+                    }
+                }
+                case "5" -> {
+                    System.out.print("¿Está seguro de que desea cancelar el partido? (s/n): ");
+                    String confirmacion = scanner.nextLine().trim();
+                    if (confirmacion.equalsIgnoreCase("s")) {
+                        boolean exito = partidoGestionController.cancelarPartido(partido);
+                        if (exito) {
+                            System.out.println("✓ Partido cancelado exitosamente");
+                            System.out.println("Estado actual: " + partido.getEstado().getNombreEstado());
+                        } else {
+                            System.out.println("❌ No se pudo cancelar el partido");
+                        }
+                    } else {
+                        System.out.println("Cancelación abortada");
+                    }
+                }
+                case "0" -> {
+                    return;
+                }
+                default -> System.out.println("Opción inválida");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("❌ ID inválido");
+        } catch (Exception e) {
+            System.out.println("❌ Error al gestionar partido: " + e.getMessage());
+        }
     }
 
     private void agregarEstadisticasComentarios() {
-        System.out.print("Ingrese ID del partido: ");
-        Long id = scanner.nextLong();
-        scanner.nextLine();
-        
-        System.out.println("1. Agregar estadísticas");
-        System.out.println("2. Agregar comentario");
-        System.out.print("Seleccione: ");
-        int opcion = scanner.nextInt();
-        scanner.nextLine();
-        
-        // La implementación completa requeriría obtener el partido del repositorio
-        System.out.println("(Funcionalidad pendiente de implementación completa)");
+        if (usuarioActual == null) {
+            System.out.println("❌ Debes iniciar sesión para agregar estadísticas/comentarios");
+            return;
+        }
+
+        try {
+            System.out.print("Ingrese ID del partido: ");
+            String idInput = scanner.nextLine().trim();
+            if (idInput.isEmpty()) {
+                System.out.println("ID inválido");
+                return;
+            }
+            Long id = Long.parseLong(idInput);
+            
+            Partido partido = partidoModel.obtenerPartido(id);
+            if (partido == null) {
+                System.out.println("❌ Partido no encontrado");
+                return;
+            }
+
+            // Mostrar información del partido
+            System.out.println("\n=== Estadísticas y Comentarios ===");
+            System.out.println("Partido ID: " + partido.getId());
+            System.out.println("Deporte: " + partido.getDeporte().getNombre());
+            System.out.println("Fecha: " + partido.getFechaHora());
+            
+            // Mostrar estadísticas actuales
+            String estadisticasActuales = partido.getPartidoEstadisticas().obtenerEstadisticas();
+            if (estadisticasActuales != null && !estadisticasActuales.isEmpty()) {
+                System.out.println("\nEstadísticas actuales:");
+                System.out.println(estadisticasActuales);
+            } else {
+                System.out.println("\nEstadísticas: (sin estadísticas)");
+            }
+            
+            // Mostrar comentarios actuales
+            List<String> comentarios = partido.getPartidoEstadisticas().obtenerComentarios();
+            if (comentarios != null && !comentarios.isEmpty()) {
+                System.out.println("\nComentarios:");
+                for (int i = 0; i < comentarios.size(); i++) {
+                    System.out.println("  " + (i + 1) + ". " + comentarios.get(i));
+                }
+            } else {
+                System.out.println("\nComentarios: (sin comentarios)");
+            }
+
+            // Opciones
+            System.out.println("\nOpciones:");
+            System.out.println("1. Agregar/Actualizar estadísticas");
+            System.out.println("2. Agregar comentario");
+            System.out.println("0. Volver");
+            System.out.print("Seleccione opción: ");
+            
+            String opcion = scanner.nextLine().trim();
+            
+            switch (opcion) {
+                case "1" -> {
+                    System.out.print("Ingrese las estadísticas del partido: ");
+                    String estadisticas = scanner.nextLine().trim();
+                    if (!estadisticas.isEmpty()) {
+                        boolean exito = partidoEstadisticasController.registrarEstadisticas(partido, estadisticas);
+                        if (exito) {
+                            System.out.println("✓ Estadísticas agregadas exitosamente");
+                        } else {
+                            System.out.println("❌ Error al agregar estadísticas");
+                        }
+                    } else {
+                        System.out.println("⚠ No se ingresaron estadísticas");
+                    }
+                }
+                case "2" -> {
+                    System.out.print("Ingrese su comentario: ");
+                    String comentario = scanner.nextLine().trim();
+                    if (!comentario.isEmpty()) {
+                        boolean exito = partidoEstadisticasController.agregarComentario(partido, comentario);
+                        if (exito) {
+                            System.out.println("✓ Comentario agregado exitosamente");
+                        } else {
+                            System.out.println("❌ Error al agregar comentario");
+                        }
+                    } else {
+                        System.out.println("⚠ No se ingresó ningún comentario");
+                    }
+                }
+                case "0" -> {
+                    return;
+                }
+                default -> System.out.println("Opción inválida");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("❌ ID inválido");
+        } catch (Exception e) {
+            System.out.println("❌ Error al agregar estadísticas/comentarios: " + e.getMessage());
+        }
     }
 }
 

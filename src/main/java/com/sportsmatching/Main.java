@@ -58,11 +58,15 @@ public class Main {
 
         // Repositorios
         UsuarioRepository usuarioRepository = new InMemoryUsuarioRepository();
-        com.sportsmatching.infraestructura.persistence.PartidoRepository partidoRepository = new InMemoryPartidoRepository();
-        CatalogoRepository catalogoRepository = new InMemoryCatalogoRepository();
+        // Crear primero el repositorio MVC y luego el adaptador para que compartan los mismos datos
         com.sportsmatching.presentacion.mvc.partido.modelos.PartidoRepository partidoRepositoryMVC = new com.sportsmatching.presentacion.mvc.partido.modelos.InMemoryPartidoRepository();
+        com.sportsmatching.infraestructura.persistence.PartidoRepository partidoRepository = new InMemoryPartidoRepository(partidoRepositoryMVC);
+        CatalogoRepository catalogoRepository = new InMemoryCatalogoRepository();
 
+        // Cargar datos iniciales (mock data)
         DataSeeder.seed();
+        // Cargar datos del mock a los repositorios reales
+        DataSeeder.cargarEnRepositorios(usuarioRepository, partidoRepositoryMVC, catalogoRepository);
 
         // Strategy
         MatchmakingService matchmakingService = new MatchmakingService(new EmparejamientoPorNivel());
@@ -126,7 +130,8 @@ public class Main {
             partidoEstadisticasController,
             partidoListView,
             partidoDetailView,
-            partidoFormView
+            partidoFormView,
+            partidoModel
         );
 
         // Mostrar configuración de email

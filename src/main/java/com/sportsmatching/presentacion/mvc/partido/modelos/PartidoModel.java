@@ -14,6 +14,8 @@ public class PartidoModel {
         this.repository = repository;
         this.service = service;
         this.notificacionService = notificacionService;
+        // Configurar el servicio de notificaciones en el servicio de partido
+        this.service.setNotificacionService(notificacionService);
     }
 
     public Partido crearPartido(com.sportsmatching.dominio.catalogos.Deporte deporte,
@@ -38,11 +40,28 @@ public class PartidoModel {
     }
 
     public boolean inscribirJugador(Partido partido, Usuario usuario) {
-        return service.inscribirJugador(partido, usuario);
+        boolean resultado = service.inscribirJugador(partido, usuario);
+        if (resultado) {
+            repository.actualizar(partido);
+        }
+        return resultado;
+    }
+
+    public boolean removerJugador(Partido partido, Usuario usuario) {
+        boolean resultado = service.removerJugador(partido, usuario);
+        if (resultado) {
+            repository.actualizar(partido);
+        }
+        return resultado;
     }
 
     public Partido getPartidoActual() {
         return partidoActual;
+    }
+
+    public void actualizarPartido(Partido partido) {
+        repository.actualizar(partido);
+        this.partidoActual = partido;
     }
 }
 

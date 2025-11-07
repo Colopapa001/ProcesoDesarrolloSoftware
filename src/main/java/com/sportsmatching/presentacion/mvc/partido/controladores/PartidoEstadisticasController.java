@@ -15,12 +15,16 @@ public class PartidoEstadisticasController {
 
     public boolean registrarEstadisticas(Partido partido, String estadisticas) {
         partido.getPartidoEstadisticas().registrarEstadisticas(estadisticas);
+        // Actualizar el partido en el repositorio
+        model.actualizarPartido(partido);
         view.mostrarEstadisticas(estadisticas);
         return true;
     }
 
     public boolean agregarComentario(Partido partido, String comentario) {
         partido.getPartidoEstadisticas().agregarComentario(comentario);
+        // Actualizar el partido en el repositorio
+        model.actualizarPartido(partido);
         view.mostrarComentarios(partido.getPartidoEstadisticas().obtenerComentarios());
         return true;
     }

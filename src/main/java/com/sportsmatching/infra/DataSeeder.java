@@ -1,7 +1,16 @@
 package com.sportsmatching.infra;
 
+import com.sportsmatching.dominio.*;
+import com.sportsmatching.dominio.catalogos.Deporte;
+import com.sportsmatching.dominio.catalogos.Nivel;
+import com.sportsmatching.infraestructura.persistence.CatalogoRepository;
+import com.sportsmatching.infraestructura.persistence.UsuarioRepository;
+import com.sportsmatching.presentacion.mvc.partido.modelos.PartidoRepository;
+
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Seeder de ejemplo: crea >=10 usuarios y >=10 partidos.
@@ -80,5 +89,111 @@ public class DataSeeder {
 
         System.out.println("DataSeeder: cargados usuarios=" + MockDomainDataStore.allUsuarios().size()
                 + " partidos=" + MockDomainDataStore.allPartidos().size());
+    }
+
+    /**
+     * Carga los datos del MockDomainDataStore a los repositorios reales
+     */
+    public static void cargarEnRepositorios(UsuarioRepository usuarioRepository, 
+                                           PartidoRepository partidoRepository,
+                                           CatalogoRepository catalogoRepository) {
+        // Obtener catálogos
+        List<Deporte> deportes = catalogoRepository.obtenerDeportes();
+        List<Nivel> niveles = catalogoRepository.obtenerNiveles();
+        
+        // Crear mapas para búsqueda rápida
+        Map<String, Deporte> deportesMap = new HashMap<>();
+        for (Deporte d : deportes) {
+            deportesMap.put(d.getNombre().toLowerCase(), d);
+        }
+        
+        Map<String, Nivel> nivelesMap = new HashMap<>();
+        for (Nivel n : niveles) {
+            nivelesMap.put(n.getNombre().toLowerCase(), n);
+        }
+        
+        // Mapeo de IDs de usuarios del mock a usuarios reales
+        Map<Long, Usuario> usuariosReales = new HashMap<>();
+        
+        // Convertir y cargar usuarios
+        for (MockDomainDataStore.UsuarioDTO uDTO : MockDomainDataStore.allUsuarios()) {
+            Nivel nivel = nivelesMap.get(uDTO.nivel.toLowerCase());
+            Deporte deporte = deportesMap.get(uDTO.deporteFavorito.toLowerCase());
+            
+            if (nivel == null || deporte == null) {
+                System.out.println("⚠ Advertencia: No se encontró nivel o deporte para usuario " + uDTO.username);
+                continue;
+            }
+            
+            Location ubicacion = new Location(uDTO.ubicacion.latitud, uDTO.ubicacion.longitud, uDTO.ubicacion.descripcion);
+            Usuario usuario = new Usuario(uDTO.id, uDTO.username, uDTO.email, uDTO.password, nivel, deporte, ubicacion);
+            usuarioRepository.save(usuario);
+            usuariosReales.put(uDTO.id, usuario);
+        }
+        
+        System.out.println("✓ Cargados " + usuariosReales.size() + " usuarios en el repositorio real");
+        
+        // Convertir y cargar partidos
+        int partidosCargados = 0;
+        for (MockDomainDataStore.PartidoDTO pDTO : MockDomainDataStore.allPartidos()) {
+            try {
+                Deporte deporte = deportesMap.get(pDTO.deporte.toLowerCase());
+                Usuario organizador = usuariosReales.values().stream()
+                    .filter(u -> u.getUsername().equals(pDTO.organizadorUsername))
+                    .findFirst()
+                    .orElse(null);
+                
+                Nivel nivelMin = nivelesMap.get(pDTO.nivelMin.toLowerCase());
+                Nivel nivelMax = nivelesMap.get(pDTO.nivelMax.toLowerCase());
+                
+                if (deporte == null || organizador == null || nivelMin == null || nivelMax == null) {
+                    System.out.println("⚠ Advertencia: No se pudo cargar partido ID " + pDTO.id + 
+                                     " (deporte=" + deporte + ", organizador=" + organizador + 
+                                     ", nivelMin=" + nivelMin + ", nivelMax=" + nivelMax + ")");
+                    continue;
+                }
+                
+                Location ubicacion = new Location(pDTO.ubicacion.latitud, pDTO.ubicacion.longitud, pDTO.ubicacion.descripcion);
+                
+                // Crear partido
+                Partido partido = new Partido(deporte, organizador, pDTO.jugadoresRequeridos, 
+                                              ubicacion, pDTO.fechaHora, pDTO.duracion, nivelMin, nivelMax);
+                
+                // Establecer ID
+                partido.setId((long) pDTO.id);
+                
+                // Agregar jugadores inscritos
+                if (pDTO.partidoJugadores != null && pDTO.partidoJugadores.jugadores != null) {
+                    for (MockDomainDataStore.UsuarioDTO jugadorDTO : pDTO.partidoJugadores.jugadores) {
+                        Usuario jugador = usuariosReales.get(jugadorDTO.id);
+                        if (jugador != null) {
+                            partido.getPartidoJugadores().agregarJugador(jugador);
+                        }
+                    }
+                }
+                
+                // Agregar estadísticas y comentarios
+                if (pDTO.partidoEstadisticas != null) {
+                    if (pDTO.partidoEstadisticas.estadisticas != null && !pDTO.partidoEstadisticas.estadisticas.isEmpty()) {
+                        partido.getPartidoEstadisticas().registrarEstadisticas(pDTO.partidoEstadisticas.estadisticas);
+                    }
+                    if (pDTO.partidoEstadisticas.comentarios != null) {
+                        for (String comentario : pDTO.partidoEstadisticas.comentarios) {
+                            partido.getPartidoEstadisticas().agregarComentario(comentario);
+                        }
+                    }
+                }
+                
+                // Guardar partido
+                partidoRepository.guardar(partido);
+                partidosCargados++;
+                
+            } catch (Exception e) {
+                System.out.println("❌ Error al cargar partido ID " + pDTO.id + ": " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        
+        System.out.println("✓ Cargados " + partidosCargados + " partidos en el repositorio real");
     }
 }

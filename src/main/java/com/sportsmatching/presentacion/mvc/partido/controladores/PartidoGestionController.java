@@ -23,20 +23,42 @@ public class PartidoGestionController {
         if (resultado) {
             view.actualizarCupos(partido.getPartidoJugadores().obtenerCantidadDisponible(),
                                 partido.getJugadoresRequeridos());
+            view.actualizarEstado(partido.getEstado().getNombreEstado());
         }
         return resultado;
     }
 
     public boolean cancelarPartido(Partido partido) {
+        String estadoAnterior = partido.getEstado().getNombreEstado();
         partido.cancelar();
+        model.actualizarPartido(partido);
         view.actualizarEstado(partido.getEstado().getNombreEstado());
+        // Notificar cambio de estado
+        if (!estadoAnterior.equals(partido.getEstado().getNombreEstado())) {
+            notificacionSubject.notify("CAMBIO_ESTADO", partido);
+        }
         return true;
     }
 
     public boolean confirmarPartido(Partido partido) {
+        String estadoAnterior = partido.getEstado().getNombreEstado();
         partido.confirmar();
+        model.actualizarPartido(partido);
         view.actualizarEstado(partido.getEstado().getNombreEstado());
+        // Notificar cambio de estado
+        if (!estadoAnterior.equals(partido.getEstado().getNombreEstado())) {
+            notificacionSubject.notify("CAMBIO_ESTADO", partido);
+        }
         return true;
+    }
+
+    public boolean removerJugador(Partido partido, Usuario usuario) {
+        boolean resultado = model.removerJugador(partido, usuario);
+        if (resultado) {
+            view.actualizarCupos(partido.getPartidoJugadores().obtenerCantidadDisponible(),
+                                partido.getJugadoresRequeridos());
+        }
+        return resultado;
     }
 }
 

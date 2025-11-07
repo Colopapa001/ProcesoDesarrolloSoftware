@@ -31,5 +31,9 @@ public class AuthModel {
     public void setUsuarioActual(Usuario usuarioActual) {
         this.usuarioActual = usuarioActual;
     }
+
+    public Usuario obtenerUsuario(String username) {
+        return autenticacionService.obtenerUsuario(username);
+    }
 }
 

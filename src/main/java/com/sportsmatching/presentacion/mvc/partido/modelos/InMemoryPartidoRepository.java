@@ -13,6 +13,13 @@ public class InMemoryPartidoRepository implements PartidoRepository {
     public Partido guardar(Partido partido) {
         if (partido.getId() == null) {
             partido.setId(idGenerator.getAndIncrement());
+        } else {
+            // Sincronizar el generador de IDs para evitar conflictos
+            long currentId = partido.getId();
+            long currentGenerator = idGenerator.get();
+            if (currentId >= currentGenerator) {
+                idGenerator.set(currentId + 1);
+            }
         }
         partidosById.put(partido.getId(), partido);
         return partido;

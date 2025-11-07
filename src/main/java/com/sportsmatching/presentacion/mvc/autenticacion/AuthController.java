@@ -34,5 +34,9 @@ public class AuthController {
     public Usuario obtenerUsuarioActual() {
         return model.getUsuarioActual();
     }
+
+    public Usuario obtenerUsuario(String username) {
+        return model.obtenerUsuario(username);
+    }
 }
 
