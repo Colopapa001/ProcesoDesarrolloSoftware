@@ -147,6 +147,11 @@ package "MVC" {
         + findByUsername(username: String): Usuario
         + findAll(): Collection<Usuario>
       }
+      note right of UsuarioRepository
+        Interface definida completamente
+        en paquete "MVC - Partido".
+        Ver métodos allí.
+      end note
       class PartidoService {
         + inscribirJugador(p: Partido, u: Usuario): Boolean
         + verificarCompletitud(p: Partido): Boolean
@@ -224,13 +229,6 @@ package "MVC" {
     Ver atributos y métodos allí.
   end note
 
-  note right of DistanceCalculator
-    Interface definida completamente
-    en paquete "Servicios Compartidos".
-    Ver métodos allí.
-  end note
-}
-
   package "Catálogos" {
     class CatalogoController {
       + obtenerDeportes(): List<Deporte>
@@ -253,6 +251,11 @@ package "Servicios Compartidos" {
   interface DistanceCalculator {
     + calcularDistancia(loc1: Location, loc2: Location): double
   }
+  note right of DistanceCalculator
+    Interface definida completamente
+    en este paquete.
+    Ver métodos descritos arriba.
+  end note
   class DistanciaService {
     + calcularDistancia(loc1: Location, loc2: Location): double
   }
@@ -321,6 +324,11 @@ package "Dominio" {
     - descripcion: String
     + getters
   }
+  note right of Location
+    Clase definida completamente
+    en este paquete.
+    Ver atributos y métodos arriba.
+  end note
 
   class PartidoEstadisticas {
     - estadisticas: String
@@ -368,24 +376,6 @@ RegistroModel "1" --> "0..1" Usuario : crea
 AuthModel "1" --> "0..1" Usuario : autentica
 CatalogoModel "1" --> "0..*" Deporte : obtiene
 CatalogoModel "1" --> "0..*" Nivel : obtiene
-
-note right of UsuarioRepository
-  Interface definida completamente
-  en paquete "MVC - Partido".
-  Ver métodos allí.
-end note
-
-note right of DistanceCalculator
-  Interface definida completamente
-  en paquete "Servicios Compartidos".
-  Ver métodos allí.
-end note
-
-note right of Location
-  Clase definida completamente
-  en paquete "Dominio".
-  Ver atributos y métodos allí.
-end note
 
 package "State (Estados de Partido)" {
   interface PartidoState {
@@ -690,12 +680,6 @@ package "Decorator (Notificaciones con Funcionalidad Extendida)" {
   NotificacionServiceDecorator "1" --> "1" INotificacionService : decora
   NotificacionServiceBase "1" --> "1" NotificationClient : usa
 }
-
-note right of NotificationClient
-  Interface definida completamente
-  en paquete "Observer + Adapter".
-  Ver métodos allí.
-end note
 
 EmailObserver "1" --> "0..1" INotificacionService : usa (opcional)
 PushObserver "1" --> "0..1" INotificacionService : usa (opcional)
