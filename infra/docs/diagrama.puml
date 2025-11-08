@@ -338,6 +338,12 @@ package "State (Estados de Partido)" {
   PartidoState <|.. Cancelado
 }
 
+note right of Partido
+  Clase definida completamente
+  en Página 1 (Dominio).
+  Ver atributos y métodos allí.
+end note
+
 package "Strategy (Emparejamiento)" {
   interface EmparejamientoStrategy {
     + emparejar(c: List<Usuario>, p: Partido): List<Usuario>
@@ -351,6 +357,12 @@ package "Strategy (Emparejamiento)" {
   class EmparejamientoPorHistorial {
     + emparejar(c: List<Usuario>, p: Partido): List<Usuario>
   }
+
+  note right of Usuario
+    Clase definida completamente
+    en Página 1 (Dominio).
+    Ver atributos y métodos allí.
+  end note
 
   EmparejamientoStrategy <|.. EmparejamientoPorNivel
   EmparejamientoStrategy <|.. EmparejamientoPorCercania
@@ -366,7 +378,19 @@ package "Strategy (Emparejamiento)" {
   MatchmakingService "1" --> "1" EmparejamientoStrategy
 }
 
+note right of MatchmakingService
+  Clase definida completamente
+  en esta página (Página 2).
+  Ver atributos y métodos arriba.
+end note
+
 PartidoService "1" --> "1" MatchmakingService : consulta sugerencias
+
+note right of PartidoService
+  Clase definida completamente
+  en Página 1 (MVC - Partido).
+  Ver atributos y métodos allí.
+end note
 
 newpage
 
@@ -440,6 +464,42 @@ NotificacionSubject <|-- Partido : subject
 PartidoNotificacionService "1" --> "1" NotificacionSubject : emite eventos
 PartidoGestionController "1" --> "1" NotificacionSubject : alta de observers
 
+note right of Partido
+  Clase definida completamente
+  en Página 1 (Dominio).
+  Ver atributos y métodos allí.
+end note
+
+note right of PartidoNotificacionService
+  Clase definida completamente
+  en Página 1 (MVC - Partido).
+  Ver atributos y métodos allí.
+end note
+
+note right of PartidoGestionController
+  Clase definida completamente
+  en Página 1 (MVC - Partido).
+  Ver atributos y métodos allí.
+end note
+
+note right of EmailObserver
+  Clase definida completamente
+  en esta página (Página 3).
+  Ver atributos y métodos arriba.
+end note
+
+note right of PushObserver
+  Clase definida completamente
+  en esta página (Página 3).
+  Ver atributos y métodos arriba.
+end note
+
+note right of NotificationClient
+  Interface definida completamente
+  en esta página (Página 3).
+  Ver métodos arriba.
+end note
+
 newpage
 
 title Sistema de Gestión de Encuentros Deportivos\n(MVC + State, Strategy, Observer, Adapter, Facade, Composite, Decorator)\nPágina 4: Facade y Decorator
@@ -463,6 +523,36 @@ package "Facade (Simplificación de Operaciones)" {
   PartidoServiceFacade "1" --> "1" PartidoNotificacionService : usa
   PartidoServiceFacade "1" --> "1" BusquedaModel : usa
 }
+
+note right of PartidoRepository
+  Clase definida completamente
+  en Página 1 (MVC - Partido).
+  Ver atributos y métodos allí.
+end note
+
+note right of PartidoService
+  Clase definida completamente
+  en Página 1 (MVC - Partido).
+  Ver atributos y métodos allí.
+end note
+
+note right of MatchmakingService
+  Clase definida completamente
+  en Página 2 (Strategy).
+  Ver atributos y métodos allí.
+end note
+
+note right of PartidoNotificacionService
+  Clase definida completamente
+  en Página 1 (MVC - Partido).
+  Ver atributos y métodos allí.
+end note
+
+note right of BusquedaModel
+  Clase definida completamente
+  en Página 1 (MVC - Búsqueda).
+  Ver atributos y métodos allí.
+end note
 
 package "Decorator (Notificaciones con Funcionalidad Extendida)" {
   interface INotificacionService {
@@ -505,6 +595,24 @@ EmailObserver "1" --> "0..1" INotificacionService : usa (opcional)
 PushObserver "1" --> "0..1" INotificacionService : usa (opcional)
 PartidoGestionController "1" --> "0..1" PartidoServiceFacade : usa (opcional)
 
+note right of EmailObserver
+  Clase definida completamente
+  en Página 3 (Observer).
+  Ver atributos y métodos allí.
+end note
+
+note right of PushObserver
+  Clase definida completamente
+  en Página 3 (Observer).
+  Ver atributos y métodos allí.
+end note
+
+note right of PartidoGestionController
+  Clase definida completamente
+  en Página 1 (MVC - Partido).
+  Ver atributos y métodos allí.
+end note
+
 note right of PartidoServiceFacade
   Facade simplifica operaciones
   complejas que involucran múltiples
@@ -516,6 +624,14 @@ note right of NotificacionServiceDecorator
   funcionalidad (retry, logging,
   prioridad) a las notificaciones
   de forma dinámica
+end note
+
+note bottom of PartidoServiceFacade
+  Nota: Las clases Usuario y Partido
+  usadas en los métodos de esta clase
+  están definidas completamente en
+  Página 1 (Dominio). Ver atributos
+  y métodos allí.
 end note
 
 @enduml
