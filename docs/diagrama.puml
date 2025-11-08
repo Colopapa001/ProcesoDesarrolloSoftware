@@ -206,6 +206,31 @@ package "MVC" {
     HtmlPartidoEmailBuilder "1" --> "1" EmailContent : produce
   }
 
+  note right of NotificationClient
+    Interface definida completamente
+    en paquete "Observer + Adapter".
+    Ver métodos allí.
+  end note
+
+  note right of NotificacionSubject
+    Clase definida completamente
+    en paquete "Observer + Adapter".
+    Ver atributos y métodos allí.
+  end note
+
+  note right of Usuario
+    Clase definida completamente
+    en paquete "Dominio".
+    Ver atributos y métodos allí.
+  end note
+
+  note right of DistanceCalculator
+    Interface definida completamente
+    en paquete "Servicios Compartidos".
+    Ver métodos allí.
+  end note
+}
+
   package "Catálogos" {
     class CatalogoController {
       + obtenerDeportes(): List<Deporte>
