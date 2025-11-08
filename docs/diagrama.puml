@@ -344,6 +344,24 @@ AuthModel "1" --> "0..1" Usuario : autentica
 CatalogoModel "1" --> "0..*" Deporte : obtiene
 CatalogoModel "1" --> "0..*" Nivel : obtiene
 
+note right of UsuarioRepository
+  Interface definida completamente
+  en paquete "MVC - Partido".
+  Ver métodos allí.
+end note
+
+note right of DistanceCalculator
+  Interface definida completamente
+  en paquete "Servicios Compartidos".
+  Ver métodos allí.
+end note
+
+note right of Location
+  Clase definida completamente
+  en paquete "Dominio".
+  Ver atributos y métodos allí.
+end note
+
 package "State (Estados de Partido)" {
   interface PartidoState {
     + onJugadorAgregado(p: Partido)
@@ -401,6 +419,12 @@ package "State (Estados de Partido)" {
   PartidoState <|.. Cancelado
 }
 
+note right of Partido
+  Clase definida completamente
+  en paquete "Dominio".
+  Ver atributos y métodos allí.
+end note
+
 package "Strategy (Emparejamiento)" {
   interface EmparejamientoStrategy {
     + emparejar(c: List<Usuario>, p: Partido): List<Usuario>
@@ -429,7 +453,25 @@ package "Strategy (Emparejamiento)" {
   MatchmakingService "1" --> "1" EmparejamientoStrategy
 }
 
+note right of Usuario
+  Clase definida completamente
+  en paquete "Dominio".
+  Ver atributos y métodos allí.
+end note
+
+note right of Partido
+  Clase definida completamente
+  en paquete "Dominio".
+  Ver atributos y métodos allí.
+end note
+
 PartidoService "1" --> "1" MatchmakingService : consulta sugerencias
+
+note right of PartidoService
+  Clase definida completamente
+  en paquete "MVC - Partido".
+  Ver atributos y métodos allí.
+end note
 
 package "Observer + Adapter (Notificaciones)" {
   interface Observer {
@@ -470,6 +512,12 @@ package "Observer + Adapter (Notificaciones)" {
   NotificacionSubject "1" --> "0..*" Observer : notifica
 }
 
+note right of Partido
+  Clase definida completamente
+  en paquete "Dominio".
+  Ver atributos y métodos allí.
+end note
+
 package "Composite (Notificaciones Compuestas)" {
   abstract class ComponenteNotificacion {
     + enviar(e: String, p: Partido)
@@ -495,9 +543,33 @@ package "Composite (Notificaciones Compuestas)" {
   NotificacionSimple "1" --> "1" Observer : usa
 }
 
+note right of Partido
+  Clase definida completamente
+  en paquete "Dominio".
+  Ver atributos y métodos allí.
+end note
+
+note right of Observer
+  Interface definida completamente
+  en paquete "Observer + Adapter".
+  Ver métodos allí.
+end note
+
 NotificacionSubject <|-- Partido : subject
 PartidoNotificacionService "1" --> "1" NotificacionSubject : emite eventos
 PartidoGestionController "1" --> "1" NotificacionSubject : alta de observers
+
+note right of PartidoNotificacionService
+  Interface definida completamente
+  en paquete "MVC - Partido".
+  Ver métodos allí.
+end note
+
+note right of PartidoGestionController
+  Clase definida completamente
+  en paquete "MVC - Partido".
+  Ver atributos y métodos allí.
+end note
 
 package "Facade (Simplificación de Operaciones)" {
   class PartidoServiceFacade {
@@ -518,6 +590,44 @@ package "Facade (Simplificación de Operaciones)" {
   PartidoServiceFacade "1" --> "1" PartidoNotificacionService : usa
   PartidoServiceFacade "1" --> "1" BusquedaModel : usa
 }
+
+note right of PartidoRepository
+  Interface definida completamente
+  en paquete "MVC - Partido".
+  Ver métodos allí.
+end note
+
+note right of PartidoService
+  Clase definida completamente
+  en paquete "MVC - Partido".
+  Ver atributos y métodos allí.
+end note
+
+note right of MatchmakingService
+  Clase definida completamente
+  en paquete "Strategy".
+  Ver atributos y métodos allí.
+end note
+
+note right of PartidoNotificacionService
+  Interface definida completamente
+  en paquete "MVC - Partido".
+  Ver métodos allí.
+end note
+
+note right of BusquedaModel
+  Clase definida completamente
+  en paquete "MVC - Búsqueda".
+  Ver atributos y métodos allí.
+end note
+
+note bottom of PartidoServiceFacade
+  Nota: Las clases Usuario y Partido
+  usadas en los métodos de esta clase
+  están definidas completamente en
+  paquete "Dominio". Ver atributos
+  y métodos allí.
+end note
 
 package "Decorator (Notificaciones con Funcionalidad Extendida)" {
   interface INotificacionService {
@@ -556,9 +666,33 @@ package "Decorator (Notificaciones con Funcionalidad Extendida)" {
   NotificacionServiceBase "1" --> "1" NotificationClient : usa
 }
 
+note right of NotificationClient
+  Interface definida completamente
+  en paquete "Observer + Adapter".
+  Ver métodos allí.
+end note
+
 EmailObserver "1" --> "0..1" INotificacionService : usa (opcional)
 PushObserver "1" --> "0..1" INotificacionService : usa (opcional)
 PartidoGestionController "1" --> "0..1" PartidoServiceFacade : usa (opcional)
+
+note right of EmailObserver
+  Clase definida completamente
+  en paquete "Observer + Adapter".
+  Ver atributos y métodos allí.
+end note
+
+note right of PushObserver
+  Clase definida completamente
+  en paquete "Observer + Adapter".
+  Ver atributos y métodos allí.
+end note
+
+note right of PartidoGestionController
+  Clase definida completamente
+  en paquete "MVC - Partido".
+  Ver atributos y métodos allí.
+end note
 
 note right of PartidoServiceFacade
   Facade simplifica operaciones
